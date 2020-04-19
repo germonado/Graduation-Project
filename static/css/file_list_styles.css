@@ -1,0 +1,48 @@
+.fileList div {
+    margin-top: 50px;
+    margin-left: 50px;
+}
+.fileList ul {
+    /*list-style: none;*/
+    margin: 0px;
+    padding: 0px;
+    max-width: 400px;
+    width: 100%
+}
+.fileList ul li {
+    padding: 5px 0px 5px 5px;
+    margin: 10px 10px 0px 10px;
+    border: 1px solid #EFEFEF;
+    font-size: 14px;
+    float : left;
+    display : inline;
+}
+.fileList ul li:last-child {
+    border-bottom: 0px;
+}
+.fileList ul li {
+    -webkit-transition: background-color 0.3s linear;
+    -moz-transition: background-color 0.3s linear;
+    -ms-transition: background-color 0.3s linear;
+    -o-transition: background-color 0.3s linear;
+    transition: background-color 0.3s linear;
+}
+.fileList ul li:hover {
+    background-color: #F6F6F6;
+}
+.fileList ul a:link {
+    color: #333333;
+    font-weight: bold;
+}
+.fileList ul a:active {
+    color: #333333;
+    font-weight: bold;
+}
+.fileList ul a:visited {
+    color: #333333;
+    font-weight: bold;
+}
+.fileList ul a {
+    display:block;
+    text-decoration:none
+}
