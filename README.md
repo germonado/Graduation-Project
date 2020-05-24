@@ -15,5 +15,5 @@
 - flask와 DB 연동
 - Frontend에서 사용자 최적 데이터 표시
 
-# Future Goals 
+# Future Goal
 - 사용자가 IoT 장치를 모니터링 하며 오작동 여부 체크할 수 있도록 하는 것
