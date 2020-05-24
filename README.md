@@ -6,7 +6,11 @@
 - Windows10(64bit)
 - Python3.6
 - Flask 기반
+- Source tree 기반 협업
 
 # Future Goals & Todo list
 - .exe 파일로 UI 실행
-- 
+- 스니핑한 신호를 바탕으로 로그 데이터 정제
+- DB 스키마 구성 및 테이블 제작
+- flask와 DB 연동
+- Frontend에서 사용자 최적 데이터 표시
