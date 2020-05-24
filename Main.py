@@ -7,7 +7,7 @@ from flask import send_from_directory
 from flask_socketio import SocketIO
 from flask_socketio import emit
 from socket import *
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import numpy as np
 import wave
 import io
@@ -17,16 +17,27 @@ import threading
 import time
 import socket
 import random
-
-
+from flask import Blueprint, request, render_template, flash, redirect, url_for
+from flask import current_app as current_app
+ 
+from app.module import dbModule
 
 HOST_ADDRESS = socket.gethostbyname(socket.getfqdn())
 
 HOST_PORT = 8085
 
+# 생각해보면 사용자가 저장여부 판단하지 않을 것으로 예상하는데, db 저장은 백엔드에서 다 구현하고 알아서 필터링 해야하지 않을까
+# 1. 파일 로드
+# 2. 필터링 및 로그 파일 생성해서 사용자에게 보여주거나 다운가능하도록
+# 3. 필터링 한 데이터는 DB로 바로 저장(로그 파일도 따로 만들고)
+# 4. DB 테이블을 프로토콜 별로 만들까? 뭘 기준으로 나눠서 해야할까
+# 5. 졸프 ppt 분석할 필요 있음
+# 6. 남의 PC에서 local DB 쓰면 어케되는거지? MySQL 사용하면?
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-socket_io = SocketIO(app)
+#socket_io = SocketIO(app)
+test= Blueprint('test', __name__, url_prefix='/test')
 
 @app.route("/")
 @app.route("/index.html")
@@ -44,16 +55,72 @@ def log_lists():
 @app.route('/log_file_download')
 def log_file_download():
     path = "./log_data/"
-
     file_name = flask_request.args.get('file_name', None)
     return send_file(path + file_name, attachment_filename=file_name, as_attachment=True)
+
+# INSERT 함수 예제
+@test.route('/insert', methods=['GET'])
+def insert():
+    db_class= dbModule.Database()
+ 
+    sql     = "INSERT INTO testDB.testTable(test) \
+                VALUES('%s')"% ('testData')
+    db_class.execute(sql)
+    db_class.commit()
+ 
+    return render_template('/test/test.html',
+                           result='insert is done!',
+                           resultData=None,
+                           resultUPDATE=None)
+ 
+ 
+ 
+# SELECT 함수 예제
+@test.route('/select', methods=['GET'])
+def select():
+    db_class= dbModule.Database()
+ 
+    sql     = "SELECT idx, test \
+                FROM testDB.testTable"
+    row     = db_class.executeAll(sql)
+ 
+    print(row)
+ 
+    return render_template('/test/test.html',
+                            result=None,
+                            resultData=row[0],
+                            resultUPDATE=None)
+ 
+ 
+ 
+# UPDATE 함수 예제
+@test.route('/update', methods=['GET'])
+def update():
+    db_class= dbModule.Database()
+ 
+    sql     = "UPDATE testDB.testTable \
+                SET test='%s' \
+                WHERE test='testData'"% ('update_Data')
+    db_class.execute(sql)   
+    db_class.commit()
+ 
+    sql     = "SELECT idx, test \
+                FROM testDB.testTable"
+    row     = db_class.executeAll(sql)
+ 
+    return render_template('/test/test.html',
+                            result=None,
+                            resultData=None,
+                            resultUPDATE=row[0])
 
 
 if __name__ == "__main__":
     print('Start Main')
     #while True:
     try:
-        socket_io.run(app, host=HOST_ADDRESS, port=HOST_PORT, debug=True)
+    #    socket_io.run(app, host=HOST_ADDRESS, port=HOST_PORT, debug=True)
+        app.run(host=HOST_ADDRESS, port=HOST_PORT, debug=True)
+
     except Exception as e:
         print('Error :', e)
     # app.run(host=HOST_ADDRESS, port=HOST_PORT)
