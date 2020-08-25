@@ -1,0 +1,8 @@
+{
+	"Time" : "21:06:43",
+	"CLuster" : "LVL_CTRL",
+	"Command" : "MV_TO_LVL_ONOFF",
+	"payload" : "[(108, 32), (0, 33)]",
+	"interval" : "0.5",
+	"return value" : "108"
+}

@@ -7,7 +7,6 @@ from flask import send_from_directory
 from flask_socketio import SocketIO
 from flask_socketio import emit
 from socket import *
-#import matplotlib.pyplot as plt
 import numpy as np
 import wave
 import io
@@ -36,7 +35,6 @@ HOST_PORT = 8085
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-#socket_io = SocketIO(app)
 test= Blueprint('test', __name__, url_prefix='/test')
 
 @app.route("/")
@@ -113,15 +111,13 @@ def update():
                             resultData=None,
                             resultUPDATE=row[0])
 
-
+# default host address 127.0.0.1
+# host port numer 8085
 if __name__ == "__main__":
     print('Start Main')
-    #while True:
     try:
-    #    socket_io.run(app, host=HOST_ADDRESS, port=HOST_PORT, debug=True)
-        app.run(host=HOST_ADDRESS, port=HOST_PORT, debug=True)
+        app.run(host='127.0.0.1', port=HOST_PORT, debug=True)
 
     except Exception as e:
         print('Error :', e)
-    # app.run(host=HOST_ADDRESS, port=HOST_PORT)
 
