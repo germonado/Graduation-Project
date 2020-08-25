@@ -21,7 +21,7 @@ from flask import current_app as current_app
  
 from app.module import dbModule
 
-HOST_ADDRESS = socket.gethostbyname(socket.getfqdn())
+HOST_ADDRESS = '127.0.0.1'
 
 HOST_PORT = 8085
 
@@ -90,7 +90,6 @@ def select():
                             resultUPDATE=None)
  
  
- 
 # UPDATE 함수 예제
 @test.route('/update', methods=['GET'])
 def update():
@@ -116,7 +115,7 @@ def update():
 if __name__ == "__main__":
     print('Start Main')
     try:
-        app.run(host='127.0.0.1', port=HOST_PORT, debug=True)
+        app.run(host=HOST_ADDRESS, port=HOST_PORT, debug=True)
 
     except Exception as e:
         print('Error :', e)
