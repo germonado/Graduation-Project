@@ -1,0 +1,227 @@
+[
+    {
+        "date": "2020-09-04 6:42:18.907 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "colorTemperature",
+        "value": "2700",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer colorTemperature is 2700"
+    },
+    {
+        "date": "2020-09-04 6:42:14.431 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "colorTemperature",
+        "value": "3500",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer colorTemperature is 3500"
+    },
+    {
+        "date": "2020-09-04 6:42:07.607 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "level",
+        "value": "10",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer level is 10"
+    },
+    {
+        "date": "2020-09-04 6:42:03.682 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "level",
+        "value": "50",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer level is 50"
+    },
+    {
+        "date": "2020-09-04 6:41:58.238 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "colorTemperature",
+        "value": "5000",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer colorTemperature is 5000"
+    },
+    {
+        "date": "2020-09-04 6:41:48.821 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "colorTemperature",
+        "value": "3500",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer colorTemperature is 3500"
+    },
+    {
+        "date": "2020-09-04 6:41:41.973 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "switch",
+        "value": "on",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer switch is on"
+    },
+    {
+        "date": "2020-09-04 6:41:39.114 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "switch",
+        "value": "off",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer switch is off"
+    },
+    {
+        "date": "2020-09-04 6:41:36.837 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "colorTemperature",
+        "value": "4000",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer colorTemperature is 4000"
+    },
+    {
+        "date": "2020-09-04 6:41:14.021 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "level",
+        "value": "10",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer level is 10"
+    },
+    {
+        "date": "2020-09-04 6:41:07.358 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "colorTemperature",
+        "value": "3000",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer colorTemperature is 3000"
+    },
+    {
+        "date": "2020-09-04 6:41:01.492 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "level",
+        "value": "100",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer level is 100"
+    },
+    {
+        "date": "2020-09-04 6:40:59.454 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "colorTemperature",
+        "value": "4000",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer colorTemperature is 4000"
+    },
+    {
+        "date": "2020-09-04 6:40:50.752 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "switch",
+        "value": "on",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer switch is on"
+    },
+    {
+        "date": "2020-09-04 6:40:50.686 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "level",
+        "value": "10",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer level is 10"
+    },
+    {
+        "date": "2020-09-04 6:40:47.830 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "switch",
+        "value": "off",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer switch is off"
+    },
+    {
+        "date": "2020-09-04 6:40:42.774 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "level",
+        "value": "100",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer level is 100"
+    },
+    {
+        "date": "2020-09-04 6:40:37.654 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "level",
+        "value": "10",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer level is 10"
+    },
+    {
+        "date": "2020-09-04 6:40:34.492 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "colorTemperature",
+        "value": "3500",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer colorTemperature is 3500"
+    },
+    {
+        "date": "2020-09-04 6:40:27.878 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "level",
+        "value": "50",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer level is 50"
+    },
+    {
+        "date": "2020-09-04 6:40:25.458 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "colorTemperature",
+        "value": "2700",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer colorTemperature is 2700"
+    },
+    {
+        "date": "2020-09-04 6:40:20.383 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "level",
+        "value": "10",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer level is 10"
+    },
+    {
+        "date": "2020-09-04 6:40:15.572 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "switch",
+        "value": "on",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer switch is on"
+    },
+    {
+        "date": "2020-09-04 6:40:13.014 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "switch",
+        "value": "off",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer switch is off"
+    },
+    {
+        "date": "2020-09-04 6:40:12.360 \uc624\ud6c4 KST",
+        "source": "DEVICE",
+        "type": "",
+        "name": "colorTemperature",
+        "value": "5000",
+        "user": "",
+        "displayed_text": "Ultra Thin Wafer colorTemperature is 5000"
+    }
+]

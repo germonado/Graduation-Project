@@ -3,7 +3,7 @@ import sys
 import datetime
 import os
 
-d_file = './exported_json'
+d_file = './exported_json/ble'
 # list append performance 질문하기
 # 크기를 정해놓고 담는 것이 나은지 아니면 append로도 충분한지
 write_req = []
@@ -59,8 +59,8 @@ def write_command_extract(filelist):
 							write_res.append(json_read[x]['_source']['layers'])
 			json_file.close()
 	write_command_succeed_check()
-	#print(write_req)
-	#print(write_res)
+	print(write_req)
+	print(write_res)
 
 
 
