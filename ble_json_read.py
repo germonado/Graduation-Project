@@ -4,8 +4,7 @@ import datetime
 import os
 
 d_file = './exported_json/ble'
-# list append performance 질문하기
-# 크기를 정해놓고 담는 것이 나은지 아니면 append로도 충분한지
+
 write_req = []
 write_res = []
 SERVICE_UUID128 = "3a:1f:25:93:d2:b6:4e:e0:af:9f:5f:c0:ad:d2:e1:55"
