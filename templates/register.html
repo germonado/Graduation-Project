@@ -1,3 +1,4 @@
+{% extends 'main.html' %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,7 +25,7 @@
 </head>
 
 <body class="bg-theme bg-theme1">
-
+{% block content %}
 <!-- start loader -->
    <div id="pageloader-overlay" class="visible incoming"><div class="loader-wrapper-outer"><div class="loader-wrapper-inner" ><div class="loader"></div></div></div></div>
    <!-- end loader -->
@@ -149,6 +150,6 @@
   
   <!-- Custom scripts -->
   <script src="assets/js/app-script.js"></script>
-  
+{% endblock %}  
 </body>
 </html>
