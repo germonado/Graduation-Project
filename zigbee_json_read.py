@@ -32,6 +32,8 @@ def filtering_zigbee_zcl(filelist):
 					elif json_read[x]['_source']['layers']['zbee_zcl'].get('Frame Control Field: Profile-wide (0x18)'):
 						if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id'] == "11":
 							default_response_from_edge.append(json_read[x]['_source']['layers'])
+						elif json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id'] == "1":
+							read_attribute_response_from_edge.append(json_read[x]['_source']['layers'])
 					elif json_read[x]['_source']['layers']['zbee_zcl'].get('Frame Control Field: Profile-wide (0x00)'):
 						if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id'] == "11":
 							default_response.append(json_read[x]['_source']['layers'])	
@@ -45,6 +47,11 @@ def filtering_zigbee_zcl(filelist):
 			json_file.close()
 
 filtering_zigbee_zcl(get_file(d_file))
-
-
+#print(command_send)
+print(command_receive_from_edge)
+#print(report_attributes_from_edge)
+#print(read_attribute)
+#print(read_attribute_response_from_edge)
+#print(default_response)
+#print(default_response_from_edge)
 

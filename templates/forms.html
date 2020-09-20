@@ -1,3 +1,4 @@
+{% extends 'main.html' %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,7 +28,7 @@
   
   
 </head>
-
+{% block content %}
 <body class="bg-theme bg-theme1">
 
 <!-- start loader -->
@@ -340,6 +341,6 @@
   
   <!-- Custom scripts -->
   <script src="assets/js/app-script.js"></script>
-	
+{% endblock %}	
 </body>
 </html>

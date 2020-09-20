@@ -19,7 +19,7 @@ import random
 from flask import Blueprint, request, render_template, flash, redirect, url_for
 from flask import current_app as current_app
  
-from app.module import dbModule
+from app.module.DB import dbModule
 
 HOST_ADDRESS = '127.0.0.1'
 
@@ -49,6 +49,38 @@ def log_lists():
     log_file_list = os.listdir(path)
 
     return render_template('log_list.html', fileList=log_file_list)
+
+@app.route("/icons")
+def icons():
+     return render_template('icons.html')
+
+@app.route("/forms")
+def forms():
+    return render_template('forms.html')
+
+@app.route("/bluetooth_report")
+def bluetooth_report():
+    return render_template('bluetooth_report.html')
+
+@app.route("/tables")
+def tables():
+    return render_template('tables.html')
+
+@app.route("/profile")
+def profile():
+    return render_template('profile.html')
+
+@app.route("/calendar")
+def calendar():
+    return render_template('calendar.html')   
+
+@app.route("/login")
+def login():
+    return render_template('login.html')   
+
+@app.route("/register")
+def registration():
+    return render_template('register.html')       
 
 @app.route('/log_file_download')
 def log_file_download():
