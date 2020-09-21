@@ -1,0 +1,40 @@
+command (->) 41개
+default response (<-) 59개
+
+read attribute (->) 3개
+read attribute response (<-) 17개
+
+report attribute 21개
+default response (->) 22개
+default response (<-) (위쪽 59개에 포함되어 있음, 예상 개수는 21개 또는 22개)
+
+총 response 개수 : 59+17 = 76개
+command + read + report = 41 + 3 + 21 = 65개
+
+이상적인 그림
+command (->) 41개
+default response (<-) 41개
+
+read attribute (->) 17개
+read attribute response (<-) 17개
+
+report attribute (<-) 21개
+default response (->) 21개
+default response (<-) 21개
+
+총 response 개수 : 41+17+21 = 79개
+command + read + report = 41+17+21 = 79개
+
+TODO
+1. 초반 연결 시 read attribute 명령으로 버전, 제조사, 현재상태(onoff, level, color) 체크
+-> 이 값 보고 초기값 전역 넣어두기
+-> 이 때 read attribute는 리스트에 넣으면 안될 듯
+-> 초기값 지정만 해주고 버리기
+
+2. 패킷 리스트 내에서 이전 sequence num 같은 것들은 전부 버리기
+-> 똑같은 seq 여러개 보낸 경우 제거안해주면 제대로 못따라감
+-> 리스트 담고 나서 트랜잭션 만들기 전에 전처리로 체크해서 지우기
+
+3. bind request (onoff/level) 도 고려해야 함
+-> 이후에도 zcl로 report attribute 명령 수행
+
