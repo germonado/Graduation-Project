@@ -5,12 +5,27 @@ import os
 
 d_file = './exported_json/zigbee'
 
+# 모든 list는 통신 모식도를 참고하였습니다.
+# 실제로 Sender에서 보낸 3가지 종류의 전체 command
 command_send = []
+
+# On/Off, Level Control의 경우 Edge에서 오는 report attribute
 report_attributes_from_edge = []
+
+# Color Control의 경우 Sender에서 보내는 read attribute
 read_attribute = []
+
+# Color Control의 경우 Edge 에서 오는 read attribute response
 read_attribute_response_from_edge = []
+
+# On/Off, Level Control의 경우 Sender에서 보내는 default response
 default_response = []
-default_response_from_edge = []
+
+# 모든 command에 대해 항상 Edge에서 오는 default response
+default_response_by_command_from_edge = []
+
+# On/Off, Level Control의 경우 Edge에서 오는 default reponse
+default_response_by_report_from_edge = []
 
 transactions = []
 
@@ -28,6 +43,33 @@ def get_file(dirpath):
 	return fileList
 
 
+#최초 command가 실행되기 이전의 주고 받은 packet들은 다 initialization이므로 filtering
+def filtering_based_by_command():
+	for i in report_attributes_from_edge[:]:
+		if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
+			del report_attributes_from_edge[report_attributes_from_edge.index(i)]
+
+	for i in read_attribute[:]:
+		if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
+			del read_attribute[read_attribute.index(i)]
+
+	for i in read_attribute_response_from_edge[:]:
+		if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
+			del read_attribute_response_from_edge[read_attribute_response_from_edge.index(i)]
+
+	for i in default_response[:]:
+		if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
+			del default_response[default_response.index(i)]
+
+	for i in default_response_by_report_from_edge[:]:
+		if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
+			del default_response_by_report_from_edge[default_response_by_report_from_edge.index(i)]
+
+	for i in default_response_by_command_from_edge[:]:
+		if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
+			del default_response_by_command_from_edge[default_response_by_command_from_edge.index(i)]
+
+
 #This function filters packets as follow zigbee protocols
 def filtering_zigbee_zcl(filelist):
 	for f in filelist:
@@ -35,45 +77,115 @@ def filtering_zigbee_zcl(filelist):
 		if os.path.splitext(d_file + '/' + f)[1] == '.json':
 			json_file = open(d_file + '/' + 'zigbee30.json', encoding="utf8")
 			json_read = json.load(json_file)
+			
 			for x in range(len(json_read)):
 				if json_read[x]['_source']['layers'].get('zbee_zcl'):
+					
+					# Sender > Edge 로 보내는 Command
 					# This if statement distinguishes command packet by Cluster-specific 0x01
 					if json_read[x]['_source']['layers']['zbee_zcl'].get('Frame Control Field: Cluster-specific (0x01)'):
-						command_send.append(json_read[x]['_source']['layers'])
-						
+						# 각 명령어 별로 해당하는 3가지 종류의 command인지 확인 후 list append
+						if json_read[x]['_source']['layers']['zbee_zcl'].get('zbee_zcl_general.level_control.cmd.srv_rx.id'):
+							command_send.append(json_read[x]['_source']['layers'])
+						elif json_read[x]['_source']['layers']['zbee_zcl'].get('zbee_zcl_general.onoff.cmd.srv_rx.id'):
+							command_send.append(json_read[x]['_source']['layers'])
+						elif json_read[x]['_source']['layers']['zbee_zcl'].get('zbee_zcl_lighting.color_control.cmd.srv_rx.id'):
+							command_send.append(json_read[x]['_source']['layers'])
+					
+					# Edge > Sender 로 날아오는 packet 들		
 					# This elif statement distinguishes default reponse from edge by Profile-wide 0x18
 					elif json_read[x]['_source']['layers']['zbee_zcl'].get('Frame Control Field: Profile-wide (0x18)'):
-                                                # command에 대한 response
-                                                
+                        
+                        # This statement distinguishes default response by command or report                        
 						if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id'] == "11":
-							default_response_from_edge.append(json_read[x]['_source']['layers'])
-						elif json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id'] == "1":
-							read_attribute_response_from_edge.append(json_read[x]['_source']['layers'])
+							
+							# Response to Command 값이 0x0b 인경우는 Report Attribute에 의해서 만들어진 Default Response
+							if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id.rsp'] == "0x0000000b":
+								default_response_by_report_from_edge.append(json_read[x]['_source']['layers'])
+							
+							# 그게 아닌 경우 command에 의한 Default Response
+							else:
+								default_response_by_command_from_edge.append(json_read[x]['_source']['layers'])
 
+						# Color control에서 발생하는 read_attribute response				
+						elif json_read[x]['_source']['layers']['zbee_zcl'].get('Status Record'):
+							if json_read[x]['_source']['layers']['zbee_zcl']['Status Record'].get('zbee_zcl_lighting.color_control.attr_id'):
+								if json_read[x]['_source']['layers']['zbee_zcl']['Status Record']['zbee_zcl_lighting.color_control.attr_id'] == "0x00000007":
+									read_attribute_response_from_edge.append(json_read[x]['_source']['layers'])
+
+					# Sender > Edge 로 가는 pakcet					
 					elif json_read[x]['_source']['layers']['zbee_zcl'].get('Frame Control Field: Profile-wide (0x00)'):
-                                                # report에 대한 response
-                                                
+                                        
+                        # On/Off, Color Control에 대해 sender > edge default response                         
 						if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id'] == "11":
 							default_response.append(json_read[x]['_source']['layers'])	
-					elif json_read[x]['_source']['layers']['zbee_zcl'].get('zbee_zcl.cmd.id'):
+						
+						# Color control에서 발생하는 read_attribute request(sender쪽)
+						if json_read[x]['_source']['layers']['zbee_zcl'].get('zbee_zcl_lighting.color_control.attr_id'):
+							if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl_lighting.color_control.attr_id'] == "0x00000007":
+								read_attribute.append(json_read[x]['_source']['layers'])
+					
+					# Edge에서 날아오는 Report attributes 
+					elif json_read[x]['_source']['layers']['zbee_zcl'].get('Frame Control Field: Profile-wide (0x08)'):
+						
 						# This if statement distinguishes report_attribute from edge
 						if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id'] == "10":
 							report_attributes_from_edge.append(json_read[x]['_source']['layers'])
-						# This elif statement distinguishes send read_attribute 
-						elif json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id'] == "0":
-							read_attribute.append(json_read[x]['_source']['layers'])
 
+			filtering_based_by_command()				
 			json_file.close()
 
 
 filtering_zigbee_zcl(get_file(d_file))
-print(len(command_send))
-print(len(report_attributes_from_edge))
-print(len(read_attribute))
-print(len(read_attribute_response_from_edge))
-print(len(default_response))
-print(len(default_response_from_edge))
 
+# 각 분류된 list 별로 packet 번호출력 및 구분, 디버깅용이므로 나중에 지울예정
+print(len(command_send))
+print("COMMAND================================")
+for i in command_send:
+	print(i['frame']['frame.number'])
+print("================================")
+
+
+print(len(default_response_by_command_from_edge))
+print("default_response_by_command_from_edge================================")
+for i in default_response_by_command_from_edge:
+	print(i['frame']['frame.number'])
+print("================================")
+
+
+print(len(report_attributes_from_edge))
+print("report_attributes_from_edge================================")
+for i in report_attributes_from_edge:
+	print(i['frame']['frame.number'])
+print("================================")
+
+
+print(len(default_response_by_report_from_edge))
+print("default_response_by_report_from_edge================================")
+for i in default_response_by_report_from_edge:
+	print(i['frame']['frame.number'])
+print("================================")
+
+
+print(len(read_attribute))
+print("read_attribute================================")
+for i in read_attribute:
+	print(i['frame']['frame.number'])
+print("================================")
+
+
+print(len(read_attribute_response_from_edge))
+print("read_attribute_response================================")
+for i in read_attribute_response_from_edge:
+	print(i['frame']['frame.number'])
+print("================================")
+
+
+print(len(default_response))
+print("default_response================================")
+for i in default_response:
+	print(i['frame']['frame.number'])
+print("================================")
 
         
 #기록할 정보 : command 종류, command 값, OK/NG/Warning, 트랜잭션 내의 패킷별 시간, warning이면 오류 생긴 트랜잭션 내의 위치
