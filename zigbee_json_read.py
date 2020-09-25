@@ -242,7 +242,7 @@ def makeTransaction():
 
 
                 #2 OK/NG 체크
-                temp = default_response_from_edge[response_idx]
+                temp = default_response_by_command_from_edge[response_idx]
 
                 if (temp['zbee_zcl']['zbee_zcl.cmd.tsn'] == seq):
                         transaction.append('OK')
@@ -268,7 +268,7 @@ def makeTransaction():
                         # 해당 report가 명령어에 맞는 report인가 체크
                         if temp['zbee_zcl']['Attribute Field'].get('zbee_zcl_general.level_control.attr_id'):
                                 if cmdStr == 'On/Off':
-                                        transaction[2] += '(No Hub Data)'
+                                        transaction[3] += '(No Hub Data)'
                                                 
                                         transaction.append(times)
                                         
@@ -280,15 +280,17 @@ def makeTransaction():
                                         continue
                                 
                                 else: # 여기서 펌웨어 검증
+                                        print(temp['zbee_zcl']['Attibute Field'])
+                                        print(level)
                                         if level != temp['zbee_zcl']['Attribute Field']['zbee_zcl_general.level_control.attr.current_level']:
-                                                transaction[2] = 'NG(Level FW)'
+                                                transaction[3] = 'NG(Level FW)'
                                         
                                         times.append(temp['frame']['frame.time'])
                                         report_idx += 1
                                 
                         elif temp['zbee_zcl']['Attribute Field'].get('zbee_zcl_general.onoff.attr_id'):
                                 if cmdStr == 'Level':
-                                        transaction[2] += '(No Hub Data)'
+                                        transaction[3] += '(No Hub Data)'
                                         transaction.append(times)
                                         
                                         for i in range(3, 6):
@@ -300,7 +302,7 @@ def makeTransaction():
 
                                 else:
                                         if on != temp['zbee_zcl']['Attribute Field']['zbee_zcl_general.onoff.attr.onoff']:
-                                                transaction[2] = 'NG(On/Off FW)'
+                                                transaction[3] = 'NG(On/Off FW)'
                                                 
                                         times.append(temp['frame']['frame.time'])
                                         report_idx += 1
@@ -312,8 +314,8 @@ def makeTransaction():
                         
 
                         if seq != temp2['zbee_zcl']['zbee_zcl.cmd.tsn']: # report에 대한 response가 없는 경우
-                                if transaction[2] == 'OK':
-                                        transaction[2] += '(Warning)'
+                                if transaction[3] == 'OK':
+                                        transaction[3] += '(Warning)'
                                 errors.append(4)
                                 errors.append(5)
 
@@ -330,8 +332,8 @@ def makeTransaction():
                                 
                         
                         if seq != temp2['zbee_zcl']['zbee_zcl.cmd.tsn']: # 마지막 response 누락인 경우
-                                if transaction[2] == 'OK':
-                                        transaction[2] += '(Warning)'
+                                if transaction[3] == 'OK':
+                                        transaction[3] += '(Warning)'
                                 errors.append(5)
                                 
                         else:
@@ -350,7 +352,7 @@ def makeTransaction():
 
                         if float(temp['frame']['frame.time_relative']) - float(command['frame']['frame.time_relative']) > 2.0:
                                 # 시간 이내 아닌 경우
-                                transaction[2] += '(No Hub Data)'
+                                transaction[3] += '(No Hub Data)'
 
                                 errors.append(3)
                                 errors.append(4)
@@ -361,11 +363,7 @@ def makeTransaction():
                                 transactions.append(transaction)
                                 continue
                         
-                        else: # 시간 이내이면 FW 검증
-                                if temp['zbee_zcl'].get('Attribute Field'):
-                                        if color != temp['zbee_zcl']['Attribute Field']['zbee_zcl_lighting.color_control.attr.color_temperature']:
-                                                transaction[2] = 'NG(Color FW)'
-                                                
+                        else:
                                 times.append(temp['frame']['frame.time'])
                                 colorReport_idx += 1
                                 
@@ -375,11 +373,15 @@ def makeTransaction():
                         temp2 = read_attribute_response_from_edge[colorReportRes_idx]
 
                         if seq != temp2['zbee_zcl']['zbee_zcl.cmd.tsn']: # report에 대한 response 없음
-                                if transaction[2] == 'OK':
-                                        transaction[2] += '(Warning)'
+                                if transaction[3] == 'OK':
+                                        transaction[3] += '(Warning)'
                                 errors.append(4)
                                 
-                        else:
+                        else: # 시간 이내이면 FW 검증
+                                if temp2['zbee_zcl'].get('Status Record'):
+                                        if color != temp2['zbee_zcl']['Status Record']['zbee_zcl_lighting.color_control.attr.color_temperature']:
+                                                transaction[3] = 'NG(Color FW)'
+                                
                                 times.append(temp2['frame']['frame.time'])
                                 colorReportRes_idx += 1
 
@@ -391,3 +393,6 @@ def makeTransaction():
 
 filtering_zigbee_zcl(get_file(d_file))
 makeTransaction()
+
+for e in transactions:
+        print(e)
