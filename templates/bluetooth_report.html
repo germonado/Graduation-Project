@@ -11,6 +11,12 @@
   
 </head>
 {% block content %}
+<script type="text/javascript">
+        function reload_time(){
+            $("table align-items-center table-flush table-borderless").load(window.location.href+("table align-items-center table-flush table-borderless"));
+        }
+        var num = 0;
+</script>
 <body class="bg-theme bg-theme1">
  
 
@@ -193,16 +199,29 @@
                  <table class="table align-items-center table-flush table-borderless">
                   <thead>
                    <tr>
-                     <th>Index</th>
+                     <th>Transaction Index</th>
                      <th>Command Type</th>
-                     <th>Time</th>
-                     <th>Recieve Index</th>
-                     <th>Recieve Time</th>
-                     <th>Edge Excute Success</th>
-                     <th>Command Success</th>
+                     <th>Send Time</th>
+                     <th>Receive Time</th>
+                     <th>Source</th>
+                     <th>Destination</th>
+                     <th>Success</th>
                    </tr>
                    </thead>
-                   <tbody><tr>
+                   <tbody>
+                     {% for transNum, cmdType, sndtime, rcvtime, src, dst, success in fileList %}
+                    <tr>
+                     <!-- <th scope="row"><script>document.write(num+=1);</script></th> -->
+                      <td>{{transNum}}</td>
+                      <td>{{cmdType}}</td>
+                      <td>{{sndtime}}</td>
+                      <td>{{rcvtime}}</td>
+                      <td>{{src}}</td>
+                      <td>{{dst}}</td>
+                      <td>{{success}}</td>
+                    </tr>
+                  {% endfor %} 
+                   <!-- <tr>
                     <td>Iphone 5</td>
                     <td><img src="https://via.placeholder.com/110x110" class="product-img" alt="product img"></td>
                     <td>#9405822</td>
@@ -267,7 +286,7 @@
                           <div class="progress-bar" role="progressbar" style="width: 100%"></div>
                         </div></td>
                    </tr>
-
+                  -->
                  </tbody></table>
                </div>
 	   </div>
