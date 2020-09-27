@@ -18,14 +18,21 @@ UUIDDICT = {
 
 class BluetoothCheck:
 	
+
 	def __init__(self):
 		self.write_req = []
 		self.write_res = []
 		self.report_list = []
+		self.cmd_statistics = []
+		self.onoff_statistics = [0,0,0]
+		self.dim_level_statistics = [0,0,0]
+		self.color_temp_statistics = [0,0,0]
 		self.d_file = './exported_json/ble'
+
 
 	# This function draws file
 	def get_file(self):
+		
 		dirpath = self.d_file
 		fileList = [s for s in os.listdir(dirpath)
 			if os.path.isfile(os.path.join(dirpath, s))]
@@ -33,10 +40,41 @@ class BluetoothCheck:
 		return fileList
 
 
+	# This function distinguish command type and count for statistics
+	def classify_command(self, str, cmd_success):
+		
+		if str == "OnOff":
+			self.onoff_statistics[0] += 1
+			if cmd_success == "Success":
+				self.onoff_statistics[1] += 1
+			else:
+				self.onoff_statistics[2] += 1
+
+		elif str == "Color Temp":
+			self.color_temp_statistics[0] += 1;
+			if cmd_success == "Success":
+				self.color_temp_statistics[1] += 1
+			else:
+				self.color_temp_statistics[2] += 1
+
+		elif str == "Dim Level":
+			self.dim_level_statistics[0] += 1
+			if cmd_success == "Success":
+				self.dim_level_statistics[1] += 1
+			else:
+				self.dim_level_statistics[2] += 1
+
+
 	# This function checks whether transaction packet succeeded or not
 	def write_command_succeed_check(self):
+		
 		reqind = resind = 0
 		transaction_number = 0
+		ng_count = 0
+		success_count = 0
+		self.color_temp = 0
+		self.onoff = 0
+		self.level_control = 0
 		resend = len(self.write_res)
 		reqend = len(self.write_req)
 		replacetxt = " 대한민국 표준시"
@@ -50,37 +88,37 @@ class BluetoothCheck:
 				if self.write_res[restmp]['btatt']['btatt.request_in_frame'] == chkfnum:
 					flag = 1
 					success_check = "Success"
-					#send_framenum = write_req[reqind]['frame']['frame.number']
+					success_count = success_count + 1
 					send_timeinfo = self.write_req[reqind]['frame']['frame.time'].replace(replacetxt,"")
 					send_cmd = UUIDDICT[self.write_req[reqind]['btatt']['btatt.handle_tree']['btatt.uuid128']]
 					receive_timeinfo = self.write_res[restmp]['frame']['frame.time'].replace(replacetxt,"")
 					src = self.write_req[reqind]['btle']['btle.master_bd_addr']
 					dst = self.write_req[reqind]['btle']['btle.slave_bd_addr']
-					temp_item_send = [transaction_number, send_cmd, send_timeinfo, receive_timeinfo, src, dst, success_check]
-					#print(cmd)
-					self.report_list.append(temp_item_send)
-					#temp_item_response = ["", send_cmd, "Response: " + str(transaction_number -1), receive_timeinfo]
-					#self.report_list.append(temp_item_response)
+					temp_item_send = [transaction_number, send_cmd, src, dst, success_check, send_timeinfo, receive_timeinfo]
+					self.classify_command(send_cmd, success_check)
 					resind = restmp+1
-					#print(chkfnum, write_res[restmp]['btatt']['btatt.request_in_frame'])
 					break
 			
 			# 만약 transaction에 대한 response가 돌아오지 않았을때
 			if flag == 0:
 				success_check = "NG"
+				ng_count = ng_count + 1
 				send_framenum = self.write_req[reqind]['frame']['frame.number']
 				send_timeinfo = self.write_req[reqind]['frame']['frame.time'].replace(replacetxt,"")
 				send_cmd = UUIDDICT[self.write_req[reqind]['btatt']['btatt.handle_tree']['btatt.uuid128']]
 				src = self.write_req[reqind]['btle']['btle.master_bd_addr']
 				dst = self.write_req[reqind]['btle']['btle.slave_bd_addr']
-				temp_item = [transaction_number, send_cmd, send_timeinfo, "", src, dst, success_check]
-				self.report_list.append(temp_item)		
+				temp_item = [transaction_number, send_cmd, src, dst, success_check, send_timeinfo, "No response"]
+				self.classify_command(send_cmd, success_check)
+				self.report_list.append(temp_item)
 
-		return self.report_list
+		self.cmd_statistics = [self.onoff_statistics, self.color_temp_statistics, self.dim_level_statistics, ng_count, success_count , len(self.write_req)]
+		return self.report_list, self.cmd_statistics
 
 
 	# This function checks if transaction packet is subset of valid service UUID
 	def write_command_uuid_check(self, dic):
+		
 		# Checking the valid SERVICE_UUID of transaction packet
 		if dic['btatt.service_uuid128'] == SERVICE_UUID128:
 			if UUIDDICT.get(dic['btatt.uuid128']):

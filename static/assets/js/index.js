@@ -1,5 +1,5 @@
 $(function() {
-    "use strict";
+    //"use strict";
 
      // chart 1
 	 
@@ -66,7 +66,7 @@ $(function() {
 		
     // chart 2
 
-		var ctx = document.getElementById("chart2").getContext('2d');
+		var ctx = document.getElementById('chart2').getContext('2d');
 			var myChart = new Chart(ctx, {
 				type: 'doughnut',
 				data: {

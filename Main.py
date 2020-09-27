@@ -64,8 +64,8 @@ def forms():
 def bluetooth_report():
     ble = ble_json_read.BluetoothCheck()
     ble.write_command_extract(ble.get_file())
-    bleList = ble.write_command_succeed_check()
-    return render_template('bluetooth_report.html', fileList=bleList)
+    ble_list, cmd_statistics = ble.write_command_succeed_check()
+    return render_template('bluetooth_report.html', fileList=ble_list, staList=cmd_statistics)
 
 @app.route("/tables")
 def tables():
