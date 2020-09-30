@@ -20,6 +20,8 @@ from flask import Blueprint, request, render_template, flash, redirect, url_for
 from flask import current_app as current_app
  
 from app.module.DB import dbModule
+import ble_json_read
+#from ble_json_read import BluetoothCheck as bleCheck
 
 HOST_ADDRESS = '127.0.0.1'
 
@@ -60,7 +62,10 @@ def forms():
 
 @app.route("/bluetooth_report")
 def bluetooth_report():
-    return render_template('bluetooth_report.html')
+    ble = ble_json_read.BluetoothCheck()
+    ble.write_command_extract(ble.get_file())
+    ble_list, cmd_statistics = ble.write_command_succeed_check()
+    return render_template('bluetooth_report.html', fileList=ble_list, staList=cmd_statistics)
 
 @app.route("/tables")
 def tables():
