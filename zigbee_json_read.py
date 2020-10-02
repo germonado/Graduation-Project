@@ -7,8 +7,6 @@ d_file = './exported_json/zigbee'
 h_file = './exported_json/hub'
 
 
-#TODO: 리스트를 spec에 기반해서 만들어야 함
-
 # 모든 list는 통신 모식도를 참고하였습니다.
 # 실제로 Sender에서 보낸 3가지 종류의 전체 command
 command_send = []
@@ -32,10 +30,44 @@ default_response_by_command_from_edge = []
 default_response_by_report_from_edge = []
 
 
+hubData = []
+transactions = []
+packets = []
+NG_packets = []
+
+
+trans_idx = 0 # 트랜잭션 번호
+
+hub_idx = 0
+command_idx = 0
+response_idx = 0 # default response 리스트의 패킷을 나타내는 index (<-)
+        
+colorReport_idx = 0 # color의 read 패킷 나타내는 index (->)
+colorReportRes_idx = 0 # color의 read response를 위한 index (<-)
+        
+report_idx = 0 # report 패킷을 나타내기 위한 index (<-)
+reportResToDevice_idx = 0 # report response 중 device 방향 index (->)
+reportResToHub_idx = 0 # report response 중 허브 방향 index (<-)
+
+on_time = 0.36
+level_time = 0.85
+color_time = 2.3
+
+switch = '1'
+level = ''
+color = ''
+
+cmdStr = ''
+cmdVal = ''
+
+
+# 함수 정의 -----------------------------------------------------------------------------------------------------------------
+
 def get_file(dirpath):
 	fileList = [s for s in os.listdir(dirpath)
 		if os.path.isfile(os.path.join(dirpath, s))]
 	fileList.sort(key=lambda s: os.path.getmtime(os.path.join(dirpath, s)), reverse=True)
+	
 	return fileList
 
 
@@ -143,9 +175,642 @@ def removeOverlap(json_list, keyList):
                         i += 1
 
 
-filtering_zigbee_zcl(get_file(d_file))
+def readHubJson(filelist):
+        for f in filelist:
+                json_file = open(h_file + '/' + f, encoding="utf8")
+                json_read = json.load(json_file)
+		
+                for i in reversed(json_read):
+                        hubData.append(i)
 
+    
+def timedelta2float(td):
+        res = td.microseconds/float(1000000) + (td.seconds + td.days * 24 * 3600)
+        return res
+
+        
+#기록할 정보 : command 종류, command 값, OK/NG/Warning, 트랜잭션 내의 패킷별 시간, warning이면 오류 생긴 트랜잭션 내의 위치
+def makeTransaction(cmdKey, cmdvalueKey):
+
+        # 사용하는 전역 변수
+        global trans_idx
+        global hub_idx, command_idx, response_idx
+        global on_time, level_time, color_time
+        global cmdVal, cmdStr
+        global switch, color, level
+
+
+        transaction = [] # 트랜잭션 번호, NG여부(Warning 포함), 커맨드, 커맨드값
+        trans_idx += 1
+        transaction.append(trans_idx)
+
+
+        # 커맨드 패킷 리스트의 follow를 위한 변수
+        cmdFrame = command_send[command_idx]['frame'] # 프레임 번호, 시간기록용
+        cmdZcl = command_send[command_idx]['zbee_zcl'] # 커맨드, 커맨드 값 기록용
+        cmdSeq = cmdZcl['zbee_zcl.cmd.tsn'] # 커맨드 sequence 번호
+        cmdOK = False # 커맨드 패킷 존재 유무
+
+        prevCmd = command_send[command_idx-1]['zbee_zcl']
+                
+        if command_idx < len(command_send)-1:
+                nextCmd = command_send[command_idx+1]['zbee_zcl']
+        else:
+                nextCmd = dict()
+
+
+        # 허브 리스트의 follow를 위한 변수
+        hub = hubData[hub_idx]
+        hubOK = False # 허브 기록 존재 유무
+
+        prevHub = hubData[hub_idx-1]
+
+        if hub_idx < len(hubData)-1:
+                nextHub = hubData[hub_idx+1]
+        else:
+                nextHub = dict()
+
+        
+        #1 hub와 command 비교: 시간대를 보면서 더 이른 쪽에 인덱스 증가, 늦은 쪽은 인덱스 유지, 같은 명령어에 시간대 이내면 두 인덱스 증가
+        hub_time = datetime.datetime.strptime(hub['date'].replace('오후', 'PM').replace('오전', 'AM'), '%Y-%m-%d %I:%M:%S.%f %p KST')
+        cmd_time = datetime.datetime.strptime(cmdFrame['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
+        diff = timedelta2float(hub_time - cmd_time)
+
+
+        if hub['name'] == 'switch':
+
+                if prevCmd.get(cmdKey[1]) and int(switch, 16) == 0 and hub['value'] == 'on' and prevHub['name'] == 'level':
+                        hub_idx += 1
+                        trans_idx -= 1
+                        switch = '1'
+                        return
+                        
+                if cmdZcl.get(cmdKey[0]) and diff < on_time and diff > 0: # 같은 커맨드, 시간차 내 존재여부 체크
+                        cmdStr = 'On/Off' #TODO: 허브 데이터 DB에 저장하는 것
+                        cmdVal = hub['value']
+                        hub_idx += 1
+                        command_idx += 1
+                        cmdOK = True
+                        hubOK = True
+                                
+                elif hub_time < cmd_time: # 패킷 누락(허브 데이터만 존재)
+                        hub_idx += 1
+                        NG_packets.append([trans_idx, 1])
+                        cmdStr = 'On/Off'
+                        cmdVal = hub['value']
+                        hubOK = True
+
+                elif hub_time > cmd_time: # 허브 누락(패킷 데이터만 존재)
+                        command_idx += 1
+                        cmdStr = 'temp'
+                        cmdOK = True
+
+
+        elif hub['name'] == 'level':
+                        
+                if cmdZcl.get(cmdKey[1]) and diff < level_time and diff > 0:
+                        cmdStr = 'level'
+                        cmdVal = hub['value']
+                        hub_idx += 1
+                        command_idx += 1
+                        cmdOK = True
+                        hubOK = True
+                                
+                elif hub_time < cmd_time: # 패킷 누락(허브 데이터만 존재)
+                        hub_idx += 1
+                        NG_packets.append([trans_idx, 1])
+                        cmdStr = 'level'
+                        cmdVal = hub['value']
+                        hubOK = True
+
+                elif hub_time > cmd_time: # 허브 누락(패킷 데이터만 존재)
+                        command_idx += 1
+                        cmdStr = 'temp'
+                        cmdOK = True
+
+
+        elif hub['name'] == 'colorTemperature':
+
+                if cmdZcl.get(cmdKey[2]) and diff < color_time and diff > 0:
+                        cmdStr = 'color'
+                        cmdVal = hub['value']
+                        hub_idx += 1
+                        command_idx += 1
+                        cmdOK = True
+                        hubOK = True
+                                
+                elif hub_time < cmd_time: # 패킷 누락(허브 데이터만 존재)
+                        hub_idx += 1
+                        NG_packets.append([trans_idx, 1])
+                        cmdStr = 'color'
+                        cmdVal = hub['value']
+                        hubOK = True
+
+                elif hub_time > cmd_time: # 허브 누락(패킷 데이터만 존재)
+                        command_idx += 1
+                        cmdStr = 'temp'
+                        cmdOK = True
+                                
+                                
+        transaction.append(cmdStr)
+
+        if cmdStr == 'color': # 직전 커맨드 패킷이 on인지 확인하고, 아니면 1번 NG
+                color = cmdVal
+
+                if not prevCmd.get(cmdKey[0]):
+                        NG_packets.append([trans_idx, 1])
+
+                if packets[-1][0] != trans_idx or packets[-1][-1] != 2:
+                        NG_packets.append([trans_idx, 2])
+                        
+                
+        # 커맨드 값을 따르게 함
+        if cmdOK:
+                if cmdZcl.get(cmdKey[0]):
+                        cmdStr = 'On/Off'
+                        if 'temp' in transaction:
+                                transaction[transaction.index('temp')] = cmdStr
+                                
+                        transaction.append(cmdZcl[cmdKey[0]])
+                        cmdVal = cmdZcl[cmdKey[0]]
+
+                elif cmdZcl.get(cmdKey[1]):
+                        cmdStr = 'level'
+                        if 'temp' in transaction:
+                                transaction[transaction.index('temp')] = cmdStr
+                                
+                        transaction.append(cmdZcl['Payload'][cmdvalueKey[0]]) # level값
+                        cmdVal = cmdZcl['Payload'][cmdvalueKey[0]]
+
+                elif cmdZcl.get(cmdKey[2]):
+                        cmdStr = 'color'
+                        if 'temp' in transaction:
+                                transaction[transaction.index('temp')] = cmdStr
+                                
+                        transaction.append(cmdZcl['Payload'][cmdvalueKey[1]]) # color값
+                        cmdVal = cmdZcl['Payload'][cmdvalueKey[1]]
+
+                if cmdStr == 'color':
+                        packets.append([trans_idx, cmdFrame['frame.number'], cmdStr, cmdVal, 'Hub', 'Edge', cmd_time, 3])
+
+                else:
+                        if cmdStr == 'On/Off' and (nextCmd.get(cmdKey[2]) or hub['name'] == 'color'):
+                                packets.append([trans_idx, cmdFrame['frame.number'], 'color', cmdVal, 'Hub', 'Edge', cmd_time, 1])
+
+                        else:
+                                packets.append([trans_idx, cmdFrame['frame.number'], cmdStr, cmdVal, 'Hub', 'Edge', cmd_time, 1])
+
+        else:
+                transaction.append(cmdVal)
+
+
+        change = True
+        
+        # 커맨드 값으로 현재 상태 업데이트
+        if cmdStr == 'On/Off':
+                if switch == cmdVal:
+                        change = False
+                
+                switch = cmdVal
+
+        elif cmdStr == 'level':
+                if level == cmdVal:
+                        change = False
+                
+                level = cmdVal
+
+        elif cmdStr == 'color':
+                if color == cmdVal:
+                        change = False
+                        
+                color = cmdVal
+
+                        
+                
+        #2 OK/NG 체크: 허브나 패킷 둘다 있으면 OK, 둘 중 하나만 있으면 Warning, 둘 다 없으면 NG
+        response = default_response_by_command_from_edge[response_idx]
+        
+        seqCompare = response['zbee_zcl']['zbee_zcl.cmd.tsn']
+        response = response['frame']             
+
+
+        if hubOK and cmdOK:
+                
+                if int(switch, 16) == 0 and hub['name'] == 'level':
+                        if not (nextHub['name'] == 'switch' and True): #TODO: 시간대 체크
+                                transaction.append('OK(No Switch Log)')
+                                
+                else:
+                        transaction.append('OK')
+
+                while seqCompare < cmdSeq:
+                        response_idx += 1
+                        response = default_response_by_command_from_edge[response_idx]
+                        seqCompare = response['zbee_zcl']['zbee_zcl.cmd.tsn']
+                        response = response['frame']
+
+                if seqCompare == cmdSeq:
+                        response_time = datetime.datetime.strptime(response['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
+                        
+                        if cmdStr == 'color':
+                                packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', response_time, 4])
+                        else:
+                                packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', response_time, 2])
+                        response_idx += 1
+
+                elif seqCompare > cmdSeq: # response 쪽 누락
+                        transaction[transaction.index('OK')] = 'OK(Sniffing Error)'
+                        NG_packets.append([trans_idx, 2])
+                        
+                        
+        elif cmdOK:
+                #cmd가 있어도 response 없으면 NG
+                if seqCompare == cmdSeq: # response가 맞게 있는 경우
+                        if change:
+                                transaction.append('OK(No Hub Data)')
+                        else:
+                                transaction.append('OK')
+
+                        response_time = datetime.datetime.strptime(response['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
+                        
+                        if cmdStr == 'color':
+                                packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', response_time, 4])
+                        elif cmdStr == 'On/Off' and (nextCmd.get(cmdKey[2]) or hub['name'] == 'color'):
+                                packets.append([trans_idx, response['frame.number'], 'color', cmdVal, 'Edge', 'Hub', response_time, 2])
+                                trans_idx -= 1
+                                response_idx += 1
+                                return
+                        else:
+                                packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', response_time, 2])
+                        response_idx += 1
+
+                elif seqCompare < cmdSeq: # 커맨드보다 seq가 작은 경우, 커맨드 누락 (커맨드 값 알수없음, 인덱스만 변경)
+                        command_idx -= 1
+                        response_idx += 1
+                        return # 만들어진 트랜잭션 폐기
+
+                elif seqCompare > cmdSeq: # response가 큰 경우, response 쪽 누락
+                        transaction.append('NG')
+                        NG_packets.append([trans_idx, 2])
+
+                        
+        elif hubOK: # 커맨드 누락 -> response 패킷 리스트 인덱스 맞춰줘야 함
+                if seqCompare == cmdSeq:
+                        transaction.append('OK(No Command Packet)')
+                        # 현재 커맨드가 누락되었는데, seq가 같다면 temp의 seq가 1 큰 것 -> response도 누락
+                        NG_packets.append([trans_idx, 2])
+
+                elif seqCompare < cmdSeq: # 커맨드 하나만 누락, response는 있음
+                        transaction.append('OK(Sniffing Error)')
+                        response_idx += 1
+
+                elif seqCompare > cmdSeq: # reponse 누락
+                        transaction.append('OK(Sniffing Error)')
+                        NG_packets.append([trans_idx, 2])
+                                
+
+        transactions.append(transaction)
+
+        if cmdOK and change:
+                return cmd_time
+        
+        elif hubOK:
+                return hub_time
+
+                
+
+def attributeCheck(command_time, cmdStr, attributes, attrValues):
+
+        # 해당 transaction에 해당하는 패킷 에러들 로깅
+        
+        # 사용하는 전역 변수
+        
+        global colorReport_idx # color의 read 패킷 나타내는 index (->)
+        global colorReportRes_idx # color의 read response를 위한 index (<-)
+                        
+        global report_idx # report 패킷을 나타내기 위한 index (<-)
+        global reportResToDevice_idx # report response 중 device 방향 index (->)
+        global reportResToHub_idx # report response 중 허브 방향 index (<-)
+
+        if cmdStr == 'color':
+                attr = read_attribute[colorReport_idx]
+                resTime = 2
+        else:
+                attr = report_attributes_from_edge[report_idx]
+
+                if cmdStr == 'On/Off':
+                        resTime = 0.3
+                else:
+                        resTime = 0.6
+                
+        
+        prevAttr = report_attributes_from_edge[report_idx-1]['zbee_zcl']
+        attr_time = datetime.datetime.strptime(attr['frame']['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
+        diff = timedelta2float(attr_time - command_time)
+
+        while attr_time < command_time and abs(diff) > resTime:
+                if cmdStr != 'color':
+                        report_idx += 1
+                        attr = report_attributes_from_edge[report_idx]
+                        attr_time = datetime.datetime.strptime(attr['frame']['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
+                else:
+                        colorReport_idx += 1
+                        attr = read_attribute[colorReport_idx]
+                        attr_time = datetime.datetime.strptime(attr['frame']['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
+
+                diff = timedelta2float(attr_time - command_time)
+                
+                print(diff)
+
+        attrFrame = attr['frame']
+        attrZcl = attr['zbee_zcl']
+        attrSeq = attrZcl['zbee_zcl.cmd.tsn']
+
+                        
+        if cmdStr == 'On/Off':
+
+                # 패킷 추가할 때 cmdStr 부분을 level로 해줘야 함
+                
+                #1 Report 패킷 체크
+                if attrZcl['Attribute Field'].get(attributes[0]) and abs(diff) < resTime:
+                        attrVal = attrZcl['Attribute Field'][attrValues[0]]
+
+                        if not ((attrVal == switch) or (int(attrVal, 16) == 0 and switch == 'off') or (int(attrVal, 16) == 1 and switch == 'on')): # 상태가 맞게 변한 경우
+                                if transactions[-1][1] != 'level':
+                                        transactions[-1][3] = 'NG(FW)'
+                                        print('On/OFF', attrVal, switch)
+
+                                
+                        if transactions[-1][1] == 'level':
+                                packets.append([trans_idx, attrFrame['frame.number'], 'level', cmdVal, 'Edge', 'Hub', attr_time, 6])
+
+                        else:
+                                packets.append([trans_idx, attrFrame['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', attr_time, 3])
+                        report_idx += 1
+                                
+
+                elif attr_time > command_time: # report 패킷 누락
+                        NG_packets.append([trans_idx, 3])
+                        attrSeq = str(int(attrSeq)-1)
+
+                
+                #2 Report response 패킷 체크 -> seq 번호로
+                response = default_response[reportResToDevice_idx]
+                seqCompare = response['zbee_zcl']['zbee_zcl.cmd.tsn']
+                response = response['frame']
+
+                while seqCompare < attrSeq:
+                        reportResToDevice_idx += 1
+                        response = default_response[reportResToDevice_idx]
+                        seqCompare = response['zbee_zcl']['zbee_zcl.cmd.tsn']
+                        response = response['frame']
+                        
+
+                if seqCompare == attrSeq:
+                        response_time = datetime.datetime.strptime(response['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
+                        
+                        if transactions[-1][1] == 'level':
+                                packets.append([trans_idx, response['frame.number'], 'level', cmdVal, 'Hub', 'Edge', response_time, 7])
+                                
+                        else:
+                                packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Hub', 'Edge', response_time, 4])
+                        reportResToDevice_idx += 1
+
+                elif seqCompare > attrSeq: # response 쪽 누락
+                        NG_packets.append([trans_idx, 4])
+
+
+                response = default_response_by_report_from_edge[reportResToHub_idx]
+                seqCompare = response['zbee_zcl']['zbee_zcl.cmd.tsn']
+                response = response['frame']
+
+                while seqCompare < attrSeq:
+                        reportResToHub_idx += 1
+                        response = default_response_by_report_from_edge[reportResToHub_idx]
+                        seqCompare = response['zbee_zcl']['zbee_zcl.cmd.tsn']
+                        response = response['frame']
+                        
+        
+                if seqCompare == attrSeq:
+                        response_time = datetime.datetime.strptime(response['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
+
+                        if transactions[-1][1] == 'level':
+                                packets.append([trans_idx, response['frame.number'], 'level', cmdVal, 'Edge', 'Hub', response_time, 8])
+                                
+                        else:
+                                packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', response_time, 5])
+                        reportResToHub_idx += 1
+
+                elif seqCompare > attrSeq: # response 쪽 누락
+                        NG_packets.append([trans_idx, 5])
+                        
+
+
+        elif cmdStr == 'level':
+                if attrZcl['Attribute Field'].get(attributes[1]) and abs(diff) < resTime:
+                        attrVal = attrZcl['Attribute Field'][attrValues[1]]
+
+                        if not ((attrVal == level) or False): # TODO: level 값 맞춰주는 부분 추가할 것(False 대신)
+                                transactions[-1][3] = 'NG(FW)'
+                                print('level', attrVal, level)
+                                
+                        packets.append([trans_idx, attrFrame['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', attr_time, 3])
+                        report_idx += 1
+
+                elif attr_time > command_time: # report 패킷 누락
+                        NG_packets.append([trans_idx, 3])
+                        attrSeq = str(int(attrSeq)-1)
+
+
+                #2 Report response 패킷 체크 -> seq 번호로
+                
+                response = default_response[reportResToDevice_idx]
+                seqCompare = response['zbee_zcl']['zbee_zcl.cmd.tsn']
+                response = response['frame']
+
+                while seqCompare < attrSeq:
+                        reportResToDevice_idx += 1
+                        response = default_response[reportResToDevice_idx]
+                        seqCompare = response['zbee_zcl']['zbee_zcl.cmd.tsn']
+                        response = response['frame']
+                        
+                if seqCompare == attrSeq:
+                        response_time = datetime.datetime.strptime(response['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
+                        packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Hub', 'Edge', response_time, 4])
+                        reportResToDevice_idx += 1
+
+                elif seqCompare > attrSeq: # response 쪽 누락
+                        NG_packets.append([trans_idx, 4])
+                        attrSeq = str(int(attrSeq)-1)
+
+
+                response = default_response_by_report_from_edge[reportResToHub_idx]
+                seqCompare = response['zbee_zcl']['zbee_zcl.cmd.tsn']
+                response = response['frame']
+
+                while seqCompare < attrSeq:
+                        reportResToHub_idx += 1
+                        response = default_response_by_report_from_edge[reportResToHub_idx]
+                        seqCompare = response['zbee_zcl']['zbee_zcl.cmd.tsn']
+                        response = response['frame']
+                        
+        
+                if seqCompare == attrSeq:
+                        response_time = datetime.datetime.strptime(response['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
+                        packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', response_time, 5])
+                        reportResToHub_idx += 1
+
+                elif seqCompare > attrSeq: # response 쪽 누락
+                        NG_packets.append([trans_idx, 5])
+
+
+                # 현재 상태가 off이면 다음에 hub에 on이 와야 함-> report attribute 검사하기
+                if switch == 'off' or int(switch, 16) == 0:
+                        attributeCheck(command_time, 'On/Off', attributes, attrValues)
+                        return
+
+
+        elif cmdStr == 'color':
+
+                #1 Read report 패킷 체크
+                if attrZcl.get(attributes[2]) and abs(diff) < resTime:
+                        packets.append([trans_idx, attrFrame['frame.number'], cmdStr, cmdVal, 'Hub', 'Edge', attr_time, 5])
+                        colorReport_idx += 1
+
+                elif attr_time > command_time: # report 패킷 누락
+                        NG_packets.append([trans_idx, 5])
+                        attrSeq = str(int(attrSeq)-1)
+
+                
+                #2 Read report response 패킷 체크 -> seq 번호로
+                response = read_attribute_response_from_edge[colorReportRes_idx]
+                seqCompare = response['zbee_zcl']['zbee_zcl.cmd.tsn']
+                resValue = response['zbee_zcl']['Status Record'][attrValues[2]]
+                response = response['frame']
+
+                while seqCompare < attrSeq:
+                        colorReportRes_idx += 1
+                        response = read_attribute_response_from_edge[colorReportRes_idx]
+                        seqCompare = response['zbee_zcl']['zbee_zcl.cmd.tsn']
+                        resValue = response['zbee_zcl']['Status Record'][attrValues[2]]
+                        response = response['frame']
+                        
+                
+                if seqCompare == attrSeq:
+                        response_time = datetime.datetime.strptime(response['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
+                        packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', response_time, 6])
+                        colorReportRes_idx += 1
+
+                        if not (color == resValue or False): #TODO: color값이 허브값 가져오면 맞춰줘야 함
+                                transactions[-1][3] = 'NG(FW)'
+                                print('color', color, resValue)
+
+                elif seqCompare > attrSeq: # response 쪽 누락
+                        NG_packets.append([trans_idx, 6])
+                
+
+
+def errorCheck():
+        
+        while hub_idx < len(hubData) or command_idx < len(command_send):
+
+                time = makeTransaction(command_key, command_value)
+                # check할 필요가 없는 경우 존재함 -> 허브 데이터가 없어도 될 때
+                # color 앞의 on, 값이 이전과 다르지 않은 커맨드 날라올 때
+                
+                if time != None:
+                        attributeCheck(time, cmdStr, attribute_list, attribute_values)
+
+                # 시간이 return될 때, None인 경우는 on-color의 on, level 다음 on
+
+
+
+def addSniffingError():
+        global transactions
+
+        for NG in NG_packets:
+              if transactions[NG[0]-1][-1] == 'OK':
+                      transactions[NG[0]-1][-1] = 'OK(Sniffing Error)'
+
+
+
+# 디버깅용 출력 함수 ----------------------------------------------------------------------------
+
+# 각 분류된 list 별로 packet 번호출력 및 구분, 디버깅용이므로 나중에 지울예정
+def debuging():
+        
+        print(len(command_send))
+        print("COMMAND================================")
+        for i in command_send:
+                print(i['frame']['frame.number'])
+                
+        print("================================")
+
+
+        print(len(default_response_by_command_from_edge))
+        print("default_response_by_command_from_edge================================")
+        for i in default_response_by_command_from_edge:
+                print(i['frame']['frame.number'])
+        print("================================")
+
+
+        print(len(report_attributes_from_edge))
+        print("report_attributes_from_edge================================")
+        for i in report_attributes_from_edge:
+                print(i['frame']['frame.number'])
+        print("================================")
+
+
+        print(len(default_response_by_report_from_edge))
+        print("default_response_by_report_from_edge================================")
+        for i in default_response_by_report_from_edge:
+                print(i['frame']['frame.number'])
+        print("================================")
+
+
+        print(len(read_attribute))
+        print("read_attribute================================")
+        for i in read_attribute:
+                print(i['frame']['frame.number'])
+        print("================================")
+
+
+        print(len(read_attribute_response_from_edge))
+        print("read_attribute_response================================")
+        for i in read_attribute_response_from_edge:
+                print(i['frame']['frame.number'])
+        print("================================")
+
+
+        print(len(default_response))
+        print("default_response================================")
+        for i in default_response:
+                print(i['frame']['frame.number'])
+        print("================================")
+
+        print('transactions =================================================')
+        for i in transactions:
+                print(i)
+
+        print('packets ======================================================')
+        for e in packets:
+                print(e)
+
+        print('NG ===========================================================')
+        print(NG_packets)
+
+
+
+# Main 부분 ------------------------------------------------------------------------------------------------------------------------------------------------
+
+command_key = ['zbee_zcl_general.onoff.cmd.srv_rx.id', 'zbee_zcl_general.level_control.cmd.srv_rx.id', 'zbee_zcl_lighting.color_control.cmd.srv_rx.id']
+command_value = ['zbee_zcl_general.level_control.level', 'zbee_zcl_lighting.color_control.color_temp']
+attribute_list = ['zbee_zcl_general.onoff.attr_id', 'zbee_zcl_general.level_control.attr_id', 'zbee_zcl_lighting.color_control.attr_id']
+attribute_values = ['zbee_zcl_general.onoff.attr.onoff', 'zbee_zcl_general.level_control.attr.current_level',
+                    'zbee_zcl_lighting.color_control.attr.color_temperature']
 key_list = ['zbee_zcl', 'zbee_zcl.cmd.tsn']
+
+filtering_zigbee_zcl(get_file(d_file))
 
 removeOverlap(command_send, key_list)
 removeOverlap(report_attributes_from_edge, key_list)
@@ -155,466 +820,10 @@ removeOverlap(default_response, key_list)
 removeOverlap(default_response_by_command_from_edge, key_list)
 removeOverlap(default_response_by_report_from_edge, key_list)
 
+readHubJson(get_file(h_file))
 
-# 각 분류된 list 별로 packet 번호출력 및 구분, 디버깅용이므로 나중에 지울예정
-print(len(command_send))
-print("COMMAND================================")
-for i in command_send:
-        print(i['frame']['frame.number'])
-        
-print("================================")
+errorCheck()
+addSniffingError()
+debuging()
 
-
-print(len(default_response_by_command_from_edge))
-print("default_response_by_command_from_edge================================")
-for i in default_response_by_command_from_edge:
-	print(i['frame']['frame.number'])
-print("================================")
-
-
-print(len(report_attributes_from_edge))
-print("report_attributes_from_edge================================")
-for i in report_attributes_from_edge:
-	print(i['frame']['frame.number'])
-print("================================")
-
-
-print(len(default_response_by_report_from_edge))
-print("default_response_by_report_from_edge================================")
-for i in default_response_by_report_from_edge:
-	print(i['frame']['frame.number'])
-print("================================")
-
-
-print(len(read_attribute))
-print("read_attribute================================")
-for i in read_attribute:
-	print(i['frame']['frame.number'])
-print("================================")
-
-
-print(len(read_attribute_response_from_edge))
-print("read_attribute_response================================")
-for i in read_attribute_response_from_edge:
-	print(i['frame']['frame.number'])
-print("================================")
-
-
-print(len(default_response))
-print("default_response================================")
-for i in default_response:
-	print(i['frame']['frame.number'])
-print("================================")
-
-
-hubData = []
-
-def readHubJson(filelist):
-        for f in filelist:
-                json_file = open(h_file + '/' + f, encoding="utf8")
-                json_read = json.load(json_file)
-		
-                for i in reversed(json_read):
-                        hubData.append(i)
-
-
-readHubJson(get_file(h_file))        
-
-transactions = []
-packets = []
-NG_packets = []
-
-def timedelta2float(td):
-        res = td.microseconds/float(1000000) + (td.seconds + td.days * 24 * 3600)
-        return res
-
-        
-#기록할 정보 : command 종류, command 값, OK/NG/Warning, 트랜잭션 내의 패킷별 시간, warning이면 오류 생긴 트랜잭션 내의 위치
-def makeTransaction(cmdKey, cmdvalueKey):
-
-        trans_idx = 0 # 트랜잭션 번호
-        
-        hub_idx = 0
-        command_idx = 0
-        response_idx = 0 # default response 리스트의 패킷을 나타내는 index (<-)
-        
-        colorReport_idx = 0 # color의 read 패킷 나타내는 index (->)
-        colorReportRes_idx = 0 # color의 read response를 위한 index (<-)
-        
-        report_idx = 0 # report 패킷을 나타내기 위한 index (<-)
-        reportResToDevice_idx = 0 # report response 중 device 방향 index (->)
-        reportResToHub_idx = 0 # report response 중 허브 방향 index (<-)
-
-        on_time = 0.35
-        level_time = 0.85
-        color_time = 2.3
-
-        cmdVal = 0
-        
-        switch = ''
-        color = ''
-        level = ''
-
-
-        while hub_idx < len(hubData) or command_idx < len(command_send):
-                
-                # hub에 있거나 command가 있으면 트랜잭션 생성
-                
-                transaction = [] # 트랜잭션 로깅 : (파일 번호), 트랜잭션 번호, NG여부(Warning 포함), 커맨드, 커맨드값
-                trans_idx += 1
-
-                command = command_send[command_idx]['frame'] # 프레임 번호, 시간기록용
-                cmd = command_send[command_idx]['zbee_zcl'] # 커맨드, 커맨드 값 기록용
-                cmdOK = False # 커맨드 패킷 존재 유무
-
-                prevCmd = command_send[command_idx-1]['zbee_zcl']
-                
-                if command_idx < len(command_send)-1:
-                        nextCmd = command_send[command_idx+1]['zbee_zcl']
-                else:
-                        nextCmd = dict()
-                
-                hub = hubData[hub_idx] # 허브 데이터 접근용
-                hubOK = False # 허브 기록 존재 유무
-
-                prevHub = hubData[hub_idx-1]
-
-                if hub_idx < len(hubData)-1:
-                        nextHub = hubData[hub_idx+1]
-                else:
-                        nextHub = dict()
-                
-                cmdStr = '' # 현재 트랜잭션의 커맨드
-                seq = cmd['zbee_zcl.cmd.tsn'] # 커맨드 response 확인용
-                transaction.append(trans_idx)
-
-
-                #1 hub와 command 비교
-                hub_time = datetime.datetime.strptime(hub['date'].replace('오후', 'PM').replace('오전', 'AM'), '%Y-%m-%d %I:%M:%S.%f %p KST')
-                cmd_time = datetime.datetime.strptime(command['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
-                diff = timedelta2float(hub_time - cmd_time)
-                print(diff)
-
-                if hub['name'] == 'switch':
-
-                        if prevCmd.get(cmdKey[1]) and switch == 'off' and hub['value'] == 'on' and hubData[hub_idx-1]['name'] == 'level':
-                                hub_idx += 1
-                                trans_idx -= 1
-                                continue
-                        
-                        if cmd.get(cmdKey[0]) and diff < on_time and diff > 0: # 같은 커맨드, 시간차 내 존재여부 체크
-                                cmdStr = 'On/Off' #TODO: 허브 데이터 DB에 저장하는 것
-                                cmdVal = hub['value']
-                                hub_idx += 1
-                                command_idx += 1
-                                cmdOK = True
-                                hubOK = True
-                                packets.append([trans_idx, command['frame.number'], cmdStr, cmdVal, 'Hub', 'Edge', command['frame.time']])
-                                
-                        elif hub_time < cmd_time: # 패킷 누락(허브 데이터만 존재)
-                                hub_idx += 1
-                                NG_packets.append([trans_idx, 0])
-                                cmdStr = 'On/Off'
-                                cmdVal = hub['value']
-                                hubOK = True
-
-                        elif hub_time > cmd_time: # 허브 누락(패킷 데이터만 존재)
-                                command_idx += 1
-                                cmdStr = 'temp'
-                                cmdOK = True
-
-
-                elif hub['name'] == 'level':
-                        
-                        if cmd.get(cmdKey[1]) and diff < level_time and diff > 0:
-                                cmdStr = 'level'
-                                cmdVal = hub['value']
-                                hub_idx += 1
-                                command_idx += 1
-                                cmdOK = True
-                                hubOK = True
-                                packets.append([trans_idx, command['frame.number'], cmdStr, cmdVal, 'Hub', 'Edge', command['frame.time']])
-                                
-                        elif hub_time < cmd_time: # 패킷 누락(허브 데이터만 존재)
-                                hub_idx += 1
-                                NG_packets.append([trans_idx, 0])
-                                cmdStr = 'level'
-                                cmdVal = hub['value']
-                                hubOK = True
-
-                        elif hub_time > cmd_time: # 허브 누락(패킷 데이터만 존재)
-                                command_idx += 1
-                                cmdStr = 'temp'
-                                cmdOK = True
-
-
-                elif hub['name'] == 'colorTemperature':
-                        if cmd.get(cmdKey[2]) and diff < color_time and diff > 0:
-                                cmdStr = 'color'
-                                cmdVal = hub['value']
-                                hub_idx += 1
-                                command_idx += 1
-                                cmdOK = True
-                                hubOK = True
-                                packets.append([trans_idx, command['frame.number'], cmdStr, cmdVal, 'Hub', 'Edge', command['frame.time']])
-                                
-                        elif hub_time < cmd_time: # 패킷 누락(허브 데이터만 존재)
-                                hub_idx += 1
-                                NG_packets.append([trans_idx, 0])
-                                cmdStr = 'color'
-                                cmdVal = hub['value']
-                                hubOK = True
-
-                        elif hub_time > cmd_time: # 허브 누락(패킷 데이터만 존재)
-                                command_idx += 1
-                                cmdStr = 'temp'
-                                cmdOK = True
-                                
-                                
-                transaction.append(cmdStr)
-                
-                # 허브 누락 시, command를 따름
-                if not hubOK:
-                        if cmd.get(cmdKey[0]):
-                                cmdStr = 'On/Off'
-                                transaction[transaction.index('temp')] = cmdStr
-                                transaction.append(cmd[cmdKey[0]])
-                                cmdVal = cmd[cmdKey[0]]
-
-                        elif cmd.get(cmdKey[1]):
-                                cmdStr = 'level'
-                                transaction[transaction.index('temp')] = cmdStr
-                                transaction.append(cmd['Payload'][cmdvalueKey[0]]) # level값
-                                cmdVal = cmd['Payload'][cmdvalueKey[0]]
-
-                        elif cmd.get(cmdKey[2]):
-                                cmdStr = 'color'
-                                transaction[transaction.index('temp')] = cmdStr
-                                transaction.append(cmd['Payload'][cmdvalueKey[1]]) # color값
-                                cmdVal = cmd['Payload'][cmdvalueKey[1]]
-
-                        packets.append([trans_idx, command['frame.number'], cmdStr, cmdVal, 'Hub', 'Edge', command['frame.time'], 0])
-
-                else:
-                        transaction.append(cmdVal)
-
-
-                # 커맨드 값으로 현재 상태 업데이트
-                if cmdStr == 'On/Off':
-                        switch = cmdVal
-
-                elif cmdStr == 'level':
-                        level = cmdVal
-
-                elif cmdStr == 'color':
-                        color = cmdVal
-                        
-                
-                #2 OK/NG 체크: 허브나 패킷 둘다 있으면 OK, 둘 중 하나만 있으면 Warning, 둘 다 없으면 NG
-                temp = default_response_by_command_from_edge[response_idx]
-                seqCompare = temp['zbee_zcl']['zbee_zcl.cmd.tsn']
-                
-                if hubOK and cmdOK:
-                        
-                        transaction.append('OK')
-
-                        if seqCompare == seq:
-                                if cmdStr == 'On/Off' and nextCmd.get(cmdKey[2]):
-                                        trans_idx -= 1
-                                        hub_idx -= 1
-                                        response_idx += 1
-                                        continue
-                                
-                                packets.append([trans_idx, temp['frame']['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', temp['frame']['frame.number'], 1])
-                                response_idx += 1
-
-                        elif seqCompare < seq: # 허브랑 커맨드가 있는데, response를 중간에 빠트림 -> 다시 처음으로 돌아가서 체크
-                                command_idx -= 1
-                                hub_idx -= 1
-                                response_idx += 1
-                                continue
-
-                        elif seqCompare > seq: # response 쪽 누락
-                                transaction[transaction.index('OK')] = 'OK(Sniffing Error)'
-                                NG_packets.append([trans_idx, 1])
-                        
-                        
-                elif cmdOK:
-                        #cmd가 있어도 response 없으면 NG
-                        if seqCompare == seq: # response가 맞게 있는 경우
-
-                                # cmd가 on/off이면 다음 명령어가 color인지 체크해야 함, color인데 누락일 때에만 다음 transaction
-                                if cmdStr == 'On/Off' and (nextCmd.get(cmdKey[2]) or nextHub['name'] == 'color'):
-                                        print('here')
-                                        trans_idx -= 1
-                                        response_idx += 1
-                                        continue
-                                
-                                transaction.append('OK(No Hub Data)')
-                                packets.append([trans_idx, temp['frame']['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', temp['frame']['frame.number'], 1])
-                                response_idx += 1
-
-                        elif seqCompare < seq: # 커맨드보다 seq가 작은 경우, 커맨드 누락 (커맨드 값 알수없음, 인덱스만 변경)
-                                command_idx -= 1
-                                response_idx += 1
-                                continue # 만들어진 트랜잭션 폐기
-
-                        elif seqCompare > seq: # response가 큰 경우, response 쪽 누락
-                                transaction.append('NG')
-                                NG_packets.append([trans_idx, 1])
-
-                        
-                elif hubOK: # 커맨드 누락 -> response 패킷 리스트 인덱스 맞춰줘야 함
-                        if seqCompare == seq:
-                                transaction.append('OK(No Command Packet)')
-                                # 현재 커맨드가 누락되었는데, seq가 같다면 temp의 seq가 1 큰 것 -> response도 누락
-                                NG_packets.append([trans_idx, 1])
-
-                        elif seqCompare < seq: # 커맨드 하나만 누락, response는 있음
-                                transaction.append('OK(Sniffing Error)')
-                                response_idx += 1
-
-                        elif seqCompare > seq: # reponse 누락
-                                transaction.append('OK(Sniffing Error)')
-                                NG_packets.append([trans_idx, 1])
-                                
-
-                print(transaction)
-                print()
-
-                '''
-                #3 Report 체크 (warning 체크) + 커맨드에 맞게 상태 업데이트가 되었는지 체크
-                if cmdStr == 'On/Off' or cmdStr == 'Level':
-                        temp = report_attributes_from_edge[report_idx] # report 패킷
-
-                        # 해당 report가 명령어에 맞는 report인가 체크
-                        if temp['zbee_zcl']['Attribute Field'].get('zbee_zcl_general.level_control.attr_id'):
-                                if cmdStr == 'On/Off':
-                                        transaction[3] += '(No Hub Data)'
-                                                
-                                        transaction.append(times)
-                                        
-                                        for i in range(3, 6):
-                                                errors.append(i)
-                                        transaction.append(errors)
-
-                                        transactions.append(transaction)
-                                        continue
-                                
-                                else: # 여기서 펌웨어 검증
-                                        print(temp['zbee_zcl']['Attribute Field'])
-                                        print(level)
-                                        if level != temp['zbee_zcl']['Attribute Field']['zbee_zcl_general.level_control.attr.current_level']:
-                                                transaction[3] = 'NG(Level FW)'
-                                        
-                                        times.append(temp['frame']['frame.time'])
-                                        report_idx += 1
-                                
-                        elif temp['zbee_zcl']['Attribute Field'].get('zbee_zcl_general.onoff.attr_id'):
-                                if cmdStr == 'Level':
-                                        transaction[3] += '(No Hub Data)'
-                                        transaction.append(times)
-                                        
-                                        for i in range(3, 6):
-                                                errors.append(i)
-                                        transaction.append(errors)
-
-                                        transactions.append(transaction)
-                                        continue
-
-                                else:
-                                        if on != temp['zbee_zcl']['Attribute Field']['zbee_zcl_general.onoff.attr.onoff']:
-                                                transaction[3] = 'NG(On/Off FW)'
-                                                
-                                        times.append(temp['frame']['frame.time'])
-                                        report_idx += 1
-
-                        
-                        # report 이후의 response들이 제대로 왔는지 체크
-                        seq = temp['zbee_zcl']['zbee_zcl.cmd.tsn'] # report 패킷의 seq
-                        temp2 = default_response[reportResToDevice_idx] # report response 패킷
-                        
-
-                        if seq != temp2['zbee_zcl']['zbee_zcl.cmd.tsn']: # report에 대한 response가 없는 경우
-                                if transaction[3] == 'OK':
-                                        transaction[3] += '(Warning)'
-                                errors.append(4)
-                                errors.append(5)
-
-                                transaction.append(times)
-                                transaction.append(errors)
-
-                                transactions.append(transaction)
-                                continue
-                                
-                        else:
-                                times.append(temp2['frame']['frame.time'])
-                                temp2 = default_response_by_report_from_edge[reportResToHub_idx]
-                                reportResToDevice_idx += 1
-                                
-                        
-                        if seq != temp2['zbee_zcl']['zbee_zcl.cmd.tsn']: # 마지막 response 누락인 경우
-                                if transaction[3] == 'OK':
-                                        transaction[3] += '(Warning)'
-                                errors.append(5)
-                                
-                        else:
-                                times.append(temp2['frame']['frame.time'])
-                                reportResToHub_idx += 1
-
-                        transaction.append(times)
-                        transaction.append(errors)
-                        transactions.append(transaction)
-
-
-                elif cmdStr == 'Color':
-
-                        #1 해당 report가 명령어 직후의 report인지 체크 (시간 간격으로 체크)
-                        temp = read_attribute[colorReport_idx]
-
-                        if float(temp['frame']['frame.time_relative']) - float(command['frame']['frame.time_relative']) > color_time:
-                                # 시간 이내 아닌 경우
-                                transaction[3] += '(No Hub Data)'
-
-                                errors.append(3)
-                                errors.append(4)
-                                
-                                transaction.append(times)
-                                transaction.append(errors)
-
-                                transactions.append(transaction)
-                                continue
-                        
-                        else:
-                                times.append(temp['frame']['frame.time'])
-                                colorReport_idx += 1
-                                
-
-                        #2 report 이후의 response가 왔는지 체크
-                        seq = temp['zbee_zcl']['zbee_zcl.cmd.tsn']
-                        temp2 = read_attribute_response_from_edge[colorReportRes_idx]
-
-                        if seq != temp2['zbee_zcl']['zbee_zcl.cmd.tsn']: # report에 대한 response 없음
-                                if transaction[3] == 'OK':
-                                        transaction[3] += '(Warning)'
-                                errors.append(4)
-                                
-                        else: # 시간 이내이면 FW 검증
-                                if temp2['zbee_zcl'].get('Status Record'):
-                                        if color != temp2['zbee_zcl']['Status Record']['zbee_zcl_lighting.color_control.attr.color_temperature']:
-                                                transaction[3] = 'NG(Color FW)'
-                                
-                                times.append(temp2['frame']['frame.time'])
-                                colorReportRes_idx += 1
-
-                        transaction.append(times)
-                        transaction.append(errors)
-                        transactions.append(transaction)
-                '''
-                        
-
-command_key = ['zbee_zcl_general.onoff.cmd.srv_rx.id', 'zbee_zcl_general.level_control.cmd.srv_rx.id', 'zbee_zcl_lighting.color_control.cmd.srv_rx.id']
-command_value = ['zbee_zcl_general.level_control.level', 'zbee_zcl_lighting.color_control.color_temp']
-
-makeTransaction(command_key, command_value)
 
