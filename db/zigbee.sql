@@ -1,40 +1,37 @@
+create schema zigbee;
+use zigbee;
 
 CREATE TABLE File_Zigbee
 ( 
-	file_number          integer  NOT NULL 
-)
-go
+	file_number          integer  NOT NULL ,
+	file_name			 varchar(30)  NULL
+);
 
 ALTER TABLE File_Zigbee
-	ADD CONSTRAINT XPKFile_Zigbee PRIMARY KEY  CLUSTERED (file_number ASC)
-go
+	ADD CONSTRAINT XPKFile_Zigbee PRIMARY KEY  (file_number ASC);
 
-CREATE TABLE Herb_Zigbee
+CREATE TABLE Hub_Zigbee
 ( 
-	source               varchar(20)  NULL ,
 	file_number          integer  NOT NULL ,
 	transaction_number   integer  NOT NULL ,
+	source               varchar(20)  NULL ,
 	attribute            varchar(20)  NULL ,
 	value                integer  NULL ,
 	time                 datetime  NULL 
-)
-go
+);
 
-ALTER TABLE Herb_Zigbee
-	ADD CONSTRAINT XPKHerb_Zigbee PRIMARY KEY  CLUSTERED (file_number ASC,transaction_number ASC)
-go
+ALTER TABLE Hub_Zigbee
+	ADD CONSTRAINT XPKHub_Zigbee PRIMARY KEY  CLUSTERED (file_number ASC,transaction_number ASC);
 
 CREATE TABLE NG_Zigbee
 ( 
 	file_number          integer  NOT NULL ,
-	location             varchar(20)  NULL ,
-	transaction_number   integer  NOT NULL 
-)
-go
+	transaction_number   integer  NOT NULL ,
+	location             integer  NOT NULL
+);
 
 ALTER TABLE NG_Zigbee
-	ADD CONSTRAINT XPKNG_Zigbee PRIMARY KEY  CLUSTERED (file_number ASC,transaction_number ASC)
-go
+	ADD CONSTRAINT XPKNG_Zigbee PRIMARY KEY  CLUSTERED (file_number ASC,transaction_number ASC);
 
 CREATE TABLE Packet_Zigbee
 ( 
@@ -45,52 +42,45 @@ CREATE TABLE Packet_Zigbee
 	command_value        integer  NULL ,
 	destination          varchar(20)  NULL ,
 	source               varchar(20)  NULL ,
-	time                 datetime  NULL 
-)
-go
+	time                 datetime  NULL,
+	location			 integer  NOT NULL
+);
 
 ALTER TABLE Packet_Zigbee
-	ADD CONSTRAINT XPKPacket_Zigbee PRIMARY KEY  CLUSTERED (file_number ASC,transaction_number ASC,packet_number ASC)
-go
+	ADD CONSTRAINT XPKPacket_Zigbee PRIMARY KEY  CLUSTERED (file_number ASC,transaction_number ASC,packet_number ASC);
 
 CREATE TABLE Transaction_Zigbee
 ( 
 	file_number          integer  NOT NULL ,
-	NG                   bit  NULL ,
 	transaction_number   integer  NOT NULL ,
 	command              varchar(20)  NULL ,
-	command_value        integer  NULL 
-)
-go
+	command_value        integer  NULL ,
+	NG                   varchar(30)  NULL
+);
 
 ALTER TABLE Transaction_Zigbee
-	ADD CONSTRAINT XPKTransaction_Zigbee PRIMARY KEY  CLUSTERED (file_number ASC,transaction_number ASC)
-go
+	ADD CONSTRAINT XPKTransaction_Zigbee PRIMARY KEY  CLUSTERED (file_number ASC,transaction_number ASC);
 
 
-ALTER TABLE Herb_Zigbee
+ALTER TABLE Hub_Zigbee
 	ADD CONSTRAINT R_5 FOREIGN KEY (file_number,transaction_number) REFERENCES Transaction_Zigbee(file_number,transaction_number)
-		ON DELETE NO ACTION
-		ON UPDATE NO ACTION
-go
+		ON DELETE CASCADE
+		ON UPDATE CASCADE;
 
 
 ALTER TABLE NG_Zigbee
 	ADD CONSTRAINT R_4 FOREIGN KEY (file_number,transaction_number) REFERENCES Transaction_Zigbee(file_number,transaction_number)
-		ON DELETE NO ACTION
-		ON UPDATE NO ACTION
-go
+		ON DELETE CASCADE
+		ON UPDATE CASCADE;
 
 
 ALTER TABLE Packet_Zigbee
 	ADD CONSTRAINT R_3 FOREIGN KEY (file_number,transaction_number) REFERENCES Transaction_Zigbee(file_number,transaction_number)
-		ON DELETE NO ACTION
-		ON UPDATE NO ACTION
-go
+		ON DELETE CASCADE
+		ON UPDATE CASCADE;
 
 
 ALTER TABLE Transaction_Zigbee
 	ADD CONSTRAINT R_1 FOREIGN KEY (file_number) REFERENCES File_Zigbee(file_number)
-		ON DELETE NO ACTION
-		ON UPDATE NO ACTION
-go
+		ON DELETE CASCADE
+		ON UPDATE CASCADE;
