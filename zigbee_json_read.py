@@ -2,6 +2,7 @@ import json
 import sys
 import datetime
 import os
+import math
 
 d_file = './exported_json/zigbee'
 h_file = './exported_json/hub'
@@ -51,9 +52,9 @@ report_idx = 0 # report 패킷을 나타내기 위한 index (<-)
 reportResToDevice_idx = 0 # report response 중 device 방향 index (->)
 reportResToHub_idx = 0 # report response 중 허브 방향 index (<-)
 
-on_time = 0.36
+on_time = 0.7
 level_time = 0.85
-color_time = 2.3
+color_time = 2.7
 
 switch = '1'
 level = ''
@@ -103,7 +104,6 @@ def filtering_based_by_command():
 #This function filters packets as follow zigbee protocols
 def filtering_zigbee_zcl(file):
 	
-		print(file)
 		if os.path.splitext(d_file + '/' + file)[1] == '.json':
 			json_file = open(d_file + '/' + file, encoding="utf8")
 			json_read = json.load(json_file)
@@ -202,9 +202,11 @@ def makeTransaction(cmdKey, cmdvalueKey):
 
 
         transaction = [] # 트랜잭션 번호, NG여부(Warning 포함), 커맨드, 커맨드값
-        trans_idx += 1
-        transaction.append(trans_idx)
 
+        if not (packets and packets[-1][-1] >= 7):
+                trans_idx += 1
+        
+        transaction.append(trans_idx)
 
         # 커맨드 패킷 리스트의 follow를 위한 변수
         cmdFrame = command_send[command_idx]['frame'] # 프레임 번호, 시간기록용
@@ -229,7 +231,7 @@ def makeTransaction(cmdKey, cmdvalueKey):
         if hub_idx < len(hubData)-1:
                 nextHub = hubData[hub_idx+1]
         else:
-                nextHub = dict()
+                nextHub = {'name':''}
 
         
         #1 hub와 command 비교: 시간대를 보면서 더 이른 쪽에 인덱스 증가, 늦은 쪽은 인덱스 유지, 같은 명령어에 시간대 이내면 두 인덱스 증가
@@ -239,13 +241,13 @@ def makeTransaction(cmdKey, cmdvalueKey):
 
 
         if hub['name'] == 'switch':
-
+                
                 if prevCmd.get(cmdKey[1]) and int(switch, 16) == 0 and hub['value'] == 'on' and prevHub['name'] == 'level':
                         hub_idx += 1
                         trans_idx -= 1
                         switch = '1'
                         return
-                        
+
                 if cmdZcl.get(cmdKey[0]) and diff < on_time and diff > 0: # 같은 커맨드, 시간차 내 존재여부 체크
                         cmdStr = 'On/Off'
                         cmdVal = hub['value']
@@ -292,6 +294,9 @@ def makeTransaction(cmdKey, cmdvalueKey):
 
         elif hub['name'] == 'colorTemperature':
 
+                if prevCmd.get(cmdKey[0]) and int(prevCmd[cmdKey[0]], 16) == 0 and prevHub['value'] == 'on' and prevHub['name'] == 'switch':
+                        switch = '1'
+
                 if cmdZcl.get(cmdKey[2]) and diff < color_time and diff > 0:
                         cmdStr = 'color'
                         cmdVal = hub['value']
@@ -320,8 +325,8 @@ def makeTransaction(cmdKey, cmdvalueKey):
 
                 if not prevCmd.get(cmdKey[0]):
                         NG_packets.append([trans_idx, 1])
-
-                if packets[-1][0] != trans_idx or packets[-1][-1] != 2:
+                        
+                if len(packets) > 1 and packets[-2][-1] == 1 and (packets[-1][2] != 'color' or packets[-1][-1] != 2):
                         NG_packets.append([trans_idx, 2])
                         
 
@@ -408,15 +413,26 @@ def makeTransaction(cmdKey, cmdvalueKey):
                 if seqCompare == cmdSeq:
                         if cmdStr == 'color':
                                 packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', response_time, 4])
+
+                        elif cmdStr == 'On/Off' and (nextCmd.get(cmdKey[2]) or nextHub['name'] == 'color'):
+                                packets.append([trans_idx, response['frame.number'], 'color', cmdVal, 'Edge', 'Hub', response_time, 2])
+                                
                         else:
                                 packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', response_time, 2])
                         response_idx += 1
 
                 elif seqCompare > cmdSeq: # response 쪽 누락
                         transaction[transaction.index('OK')] = 'OK(Sniffing Error)'
-                        NG_packets.append([trans_idx, 2])
+                        if cmdStr == 'color':
+                                NG_packets.append([trans_idx, 4])
+
+                        else:
+                                NG_packets.append([trans_idx, 2])
 
                 hub_db.append([trans_idx, hub['source'], cmdStr, hub['value'], hub_time])
+
+                if (nextCmd.get(cmdKey[2]) or nextHub['name'] == 'colorTemperature') and hub['value'] == 'on':
+                        return cmd_time
                         
                         
         elif cmdOK:
@@ -431,6 +447,7 @@ def makeTransaction(cmdKey, cmdvalueKey):
                         
                         if cmdStr == 'color':
                                 packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', response_time, 4])
+                                
                         elif cmdStr == 'On/Off' and (nextCmd.get(cmdKey[2]) or hub['name'] == 'color'):
                                 packets.append([trans_idx, response['frame.number'], 'color', cmdVal, 'Edge', 'Hub', response_time, 2])
                                 trans_idx -= 1
@@ -466,9 +483,7 @@ def makeTransaction(cmdKey, cmdvalueKey):
 
                 hub_db.append([trans_idx, hub['source'], cmdStr, hub['value'], hub_time])
                                 
-
         transactions.append(transaction)
-        print(transaction)
 
         if cmdOK and change:
                 return cmd_time
@@ -479,7 +494,6 @@ def makeTransaction(cmdKey, cmdvalueKey):
                 
 
 def attributeCheck(command_time, cmdStr, attributes, attrValues):
-
         # 해당 transaction에 해당하는 패킷 에러들 로깅
         
         # 사용하는 전역 변수
@@ -498,7 +512,7 @@ def attributeCheck(command_time, cmdStr, attributes, attrValues):
                 attr = report_attributes_from_edge[report_idx]
 
                 if cmdStr == 'On/Off':
-                        resTime = 0.3
+                        resTime = 0.4
                 else:
                         resTime = 0.8
                 
@@ -518,8 +532,6 @@ def attributeCheck(command_time, cmdStr, attributes, attrValues):
                         attr_time = datetime.datetime.strptime(attr['frame']['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
 
                 diff = timedelta2float(attr_time - command_time)
-                
-                print(diff)
 
         attrFrame = attr['frame']
         attrZcl = attr['zbee_zcl']
@@ -528,8 +540,6 @@ def attributeCheck(command_time, cmdStr, attributes, attrValues):
                         
         if cmdStr == 'On/Off':
 
-                # 패킷 추가할 때 cmdStr 부분을 level로 해줘야 함
-                
                 #1 Report 패킷 체크
                 if attrZcl['Attribute Field'].get(attributes[0]) and abs(diff) < resTime:
                         attrVal = attrZcl['Attribute Field'][attrValues[0]]
@@ -539,17 +549,29 @@ def attributeCheck(command_time, cmdStr, attributes, attrValues):
                                         transactions[-1][3] = 'NG(FW)'
                                         print('On/OFF', attrVal, switch)
 
-                                
-                        if transactions[-1][1] == 'level':
+                        
+                        if packets and packets[-1][2] == 'level':
                                 packets.append([trans_idx, attrFrame['frame.number'], 'level', cmdVal, 'Edge', 'Hub', attr_time, 6])
 
+                        elif packets and packets[-1][2] == 'color':
+                                packets.append([trans_idx, attrFrame['frame.number'], 'color', cmdVal, 'Edge', 'Hub', attr_time, 7])
+                                
                         else:
                                 packets.append([trans_idx, attrFrame['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', attr_time, 3])
                         report_idx += 1
                                 
 
                 elif attr_time > command_time: # report 패킷 누락
-                        NG_packets.append([trans_idx, 3])
+                        if packets and packets[-1][2] == 'level':
+                                NG_packets.append([trans_idx, 6])
+
+                        elif packets and packets[-1][2] == 'color':
+                                NG_packets.append([trans_idx, 7])
+
+                        else:
+                                NG_packets.append([trans_idx, 3])
+                        
+                        
                         attrSeq = str(int(attrSeq)-1)
 
                 
@@ -568,15 +590,25 @@ def attributeCheck(command_time, cmdStr, attributes, attrValues):
                 if seqCompare == attrSeq:
                         response_time = datetime.datetime.strptime(response['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
                         
-                        if transactions[-1][1] == 'level':
+                        if packets and packets[-1][2] == 'level':
                                 packets.append([trans_idx, response['frame.number'], 'level', cmdVal, 'Hub', 'Edge', response_time, 7])
+                                
+                        elif packets and packets[-1][2] == 'color':
+                                packets.append([trans_idx, response['frame.number'], 'color', cmdVal, 'Hub', 'Edge', response_time, 8])
                                 
                         else:
                                 packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Hub', 'Edge', response_time, 4])
                         reportResToDevice_idx += 1
 
                 elif seqCompare > attrSeq: # response 쪽 누락
-                        NG_packets.append([trans_idx, 4])
+                        if packets and packets[-1][2] == 'level':
+                                NG_packets.append([trans_idx, 7])
+
+                        elif packets and packets[-1][2] == 'color':
+                                NG_packets.append([trans_idx, 8])
+                        
+                        else:
+                                NG_packets.append([trans_idx, 4])
 
 
                 response = default_response_by_report_from_edge[reportResToHub_idx]
@@ -593,23 +625,37 @@ def attributeCheck(command_time, cmdStr, attributes, attrValues):
                 if seqCompare == attrSeq:
                         response_time = datetime.datetime.strptime(response['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
 
-                        if transactions[-1][1] == 'level':
+                        if packets and packets[-1][2] == 'level':
                                 packets.append([trans_idx, response['frame.number'], 'level', cmdVal, 'Edge', 'Hub', response_time, 8])
+                                
+                        elif packets and packets[-1][2] == 'color':
+                                packets.append([trans_idx, response['frame.number'], 'color', cmdVal, 'Edge', 'Hub', response_time, 9])
                                 
                         else:
                                 packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', response_time, 5])
                         reportResToHub_idx += 1
 
                 elif seqCompare > attrSeq: # response 쪽 누락
-                        NG_packets.append([trans_idx, 5])
-                        
 
+                        if packets and packets[-1][2] == 'level':
+                                NG_packets.append([trans_idx, 8])
+                                
+                        elif packets and packets[-1][2] == 'color':
+                                NG_packets.append([trans_idx, 9])
+                                cmdStr = 'color'
+                                
+                        else:
+                                NG_packets.append([trans_idx, 5])
+
+                if packets and packets[-1][2] == 'color':
+                        cmdStr = 'color'
+ 
 
         elif cmdStr == 'level':
                 if attrZcl['Attribute Field'].get(attributes[1]) and abs(diff) < resTime:
                         attrVal = attrZcl['Attribute Field'][attrValues[1]]
 
-                        if not ((attrVal == level) or False): # TODO: level 값 맞춰주는 부분 추가할 것(False 대신)
+                        if not ((attrVal == level) or (int(attrVal)/int(level) == 255/100)):
                                 transactions[-1][3] = 'NG(FW)'
                                 print('level', attrVal, level)
                                 
@@ -659,6 +705,7 @@ def attributeCheck(command_time, cmdStr, attributes, attrValues):
                         packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', response_time, 5])
                         reportResToHub_idx += 1
 
+
                 elif seqCompare > attrSeq: # response 쪽 누락
                         NG_packets.append([trans_idx, 5])
 
@@ -700,12 +747,18 @@ def attributeCheck(command_time, cmdStr, attributes, attrValues):
                         packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', response_time, 6])
                         colorReportRes_idx += 1
 
-                        if not (color == resValue or False): #TODO: color값이 허브값 가져오면 맞춰줘야 함
+                        if not (color == resValue or (round(int(color), -1) == 1000000/int(resValue))): 
                                 transactions[-1][3] = 'NG(FW)'
                                 print('color', color, resValue)
 
                 elif seqCompare > attrSeq: # response 쪽 누락
                         NG_packets.append([trans_idx, 6])
+
+
+                # 현재 상태가 off이면 다음에 hub에 on이 와야 함-> report attribute 검사하기
+                if switch == 'off' or int(switch, 16) == 0:
+                        attributeCheck(command_time, 'On/Off', attributes, attrValues)
+                        return
                 
 
 
@@ -728,8 +781,8 @@ def addSniffingError():
         global transactions
 
         for NG in NG_packets:
-              if transactions[NG[0]-1][-1] == 'OK':
-                      transactions[NG[0]-1][-1] = 'OK(Sniffing Error)'
+                if transactions[NG[0]-1][-1] == 'OK':
+                        transactions[NG[0]-1][-1] = 'OK(Sniffing Error)'
 
 
 def exportLogList(zbee_file, hub_file):
@@ -808,10 +861,11 @@ def debugging():
         print('hub ==========================================================')
         for i in hub_db:
                 print(i)
-
+        
         print('transactions =================================================')
         for i in transactions:
                 print(i)
+        
 
         print('packets ======================================================')
         for e in packets:
@@ -822,5 +876,5 @@ def debugging():
 
 
 
-exportLogList('20200603.json', 'hublog.json')
-debugging()
+#exportLogList('20200930.json', '20200930.json')
+#debugging()
