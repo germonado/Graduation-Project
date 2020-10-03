@@ -63,9 +63,19 @@ def forms():
 @app.route("/bluetooth_report")
 def bluetooth_report():
     ble = ble_json_read.BluetoothCheck()
-    ble.write_command_extract(ble.get_file())
+    #ble.write_command_extract(ble.get_file())
+    ble.get_file()
     ble_list, cmd_statistics = ble.write_command_succeed_check()
-    return render_template('bluetooth_report.html', fileList=ble_list, staList=cmd_statistics)
+    return render_template('bluetooth_report.html', fileList=ble_list)
+
+@app.route("/zigbee_report")
+def bluetooth_report():
+    ble = ble_json_read.BluetoothCheck()
+    #ble.write_command_extract(ble.get_file())
+    ble.get_file()
+    ble_list, cmd_statistics = ble.write_command_succeed_check()
+    return render_template('zigbee_report.html', fileList=ble_list, staList=cmd_statistics)
+
 
 @app.route("/tables")
 def tables():
