@@ -31,6 +31,8 @@ default_response_by_report_from_edge = []
 
 
 hubData = []
+
+hub_db = []
 transactions = []
 packets = []
 NG_packets = []
@@ -60,16 +62,16 @@ color = ''
 cmdStr = ''
 cmdVal = ''
 
+command_key = ['zbee_zcl_general.onoff.cmd.srv_rx.id', 'zbee_zcl_general.level_control.cmd.srv_rx.id',
+               'zbee_zcl_lighting.color_control.cmd.srv_rx.id']
+command_value = ['zbee_zcl_general.level_control.level', 'zbee_zcl_lighting.color_control.color_temp']
+attribute_list = ['zbee_zcl_general.onoff.attr_id', 'zbee_zcl_general.level_control.attr_id', 'zbee_zcl_lighting.color_control.attr_id']
+attribute_values = ['zbee_zcl_general.onoff.attr.onoff', 'zbee_zcl_general.level_control.attr.current_level',
+                    'zbee_zcl_lighting.color_control.attr.color_temperature']
+key_list = ['zbee_zcl', 'zbee_zcl.cmd.tsn']
+
 
 # 함수 정의 -----------------------------------------------------------------------------------------------------------------
-
-def get_file(dirpath):
-	fileList = [s for s in os.listdir(dirpath)
-		if os.path.isfile(os.path.join(dirpath, s))]
-	fileList.sort(key=lambda s: os.path.getmtime(os.path.join(dirpath, s)), reverse=True)
-	
-	return fileList
-
 
 #최초 command가 실행되기 이전의 주고 받은 packet들은 다 initialization이므로 filtering
 def filtering_based_by_command():
@@ -99,11 +101,11 @@ def filtering_based_by_command():
 
 
 #This function filters packets as follow zigbee protocols
-def filtering_zigbee_zcl(filelist):
-	for f in filelist:
-		print(f)
-		if os.path.splitext(d_file + '/' + f)[1] == '.json':
-			json_file = open(d_file + '/' + 'zigbee30.json', encoding="utf8")
+def filtering_zigbee_zcl(file):
+	
+		print(file)
+		if os.path.splitext(d_file + '/' + file)[1] == '.json':
+			json_file = open(d_file + '/' + file, encoding="utf8")
 			json_read = json.load(json_file)
 			
 			for x in range(len(json_read)):
@@ -160,7 +162,7 @@ def filtering_zigbee_zcl(filelist):
 						if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id'] == "10":
 							report_attributes_from_edge.append(json_read[x]['_source']['layers'])
 
-			filtering_based_by_command()				
+			#filtering_based_by_command()				
 			json_file.close()
 
 # 동일한 sequence 번호를 갖는 중복 패킷 제거
@@ -175,13 +177,12 @@ def removeOverlap(json_list, keyList):
                         i += 1
 
 
-def readHubJson(filelist):
-        for f in filelist:
-                json_file = open(h_file + '/' + f, encoding="utf8")
-                json_read = json.load(json_file)
+def readHubJson(fileName):
+        json_file = open(h_file + '/' + fileName, encoding="utf8")
+        json_read = json.load(json_file)
 		
-                for i in reversed(json_read):
-                        hubData.append(i)
+        for i in reversed(json_read):
+                hubData.append(i)
 
     
 def timedelta2float(td):
@@ -246,7 +247,7 @@ def makeTransaction(cmdKey, cmdvalueKey):
                         return
                         
                 if cmdZcl.get(cmdKey[0]) and diff < on_time and diff > 0: # 같은 커맨드, 시간차 내 존재여부 체크
-                        cmdStr = 'On/Off' #TODO: 허브 데이터 DB에 저장하는 것
+                        cmdStr = 'On/Off'
                         cmdVal = hub['value']
                         hub_idx += 1
                         command_idx += 1
@@ -323,7 +324,9 @@ def makeTransaction(cmdKey, cmdvalueKey):
                 if packets[-1][0] != trans_idx or packets[-1][-1] != 2:
                         NG_packets.append([trans_idx, 2])
                         
-                
+
+        change = True
+        
         # 커맨드 값을 따르게 함
         if cmdOK:
                 if cmdZcl.get(cmdKey[0]):
@@ -333,6 +336,11 @@ def makeTransaction(cmdKey, cmdvalueKey):
                                 
                         transaction.append(cmdZcl[cmdKey[0]])
                         cmdVal = cmdZcl[cmdKey[0]]
+                        
+                        if switch == cmdVal:
+                                change = False
+                        
+                        switch = cmdVal
 
                 elif cmdZcl.get(cmdKey[1]):
                         cmdStr = 'level'
@@ -342,6 +350,11 @@ def makeTransaction(cmdKey, cmdvalueKey):
                         transaction.append(cmdZcl['Payload'][cmdvalueKey[0]]) # level값
                         cmdVal = cmdZcl['Payload'][cmdvalueKey[0]]
 
+                        if level == cmdVal:
+                                change = False
+                        
+                        level = cmdVal
+
                 elif cmdZcl.get(cmdKey[2]):
                         cmdStr = 'color'
                         if 'temp' in transaction:
@@ -349,6 +362,11 @@ def makeTransaction(cmdKey, cmdvalueKey):
                                 
                         transaction.append(cmdZcl['Payload'][cmdvalueKey[1]]) # color값
                         cmdVal = cmdZcl['Payload'][cmdvalueKey[1]]
+
+                        if color == cmdVal:
+                                change = False
+                                
+                        color = cmdVal
 
                 if cmdStr == 'color':
                         packets.append([trans_idx, cmdFrame['frame.number'], cmdStr, cmdVal, 'Hub', 'Edge', cmd_time, 3])
@@ -362,43 +380,19 @@ def makeTransaction(cmdKey, cmdvalueKey):
 
         else:
                 transaction.append(cmdVal)
-
-
-        change = True
-        
-        # 커맨드 값으로 현재 상태 업데이트
-        if cmdStr == 'On/Off':
-                if switch == cmdVal:
-                        change = False
-                
-                switch = cmdVal
-
-        elif cmdStr == 'level':
-                if level == cmdVal:
-                        change = False
-                
-                level = cmdVal
-
-        elif cmdStr == 'color':
-                if color == cmdVal:
-                        change = False
-                        
-                color = cmdVal
-
                         
                 
         #2 OK/NG 체크: 허브나 패킷 둘다 있으면 OK, 둘 중 하나만 있으면 Warning, 둘 다 없으면 NG
         response = default_response_by_command_from_edge[response_idx]
         
         seqCompare = response['zbee_zcl']['zbee_zcl.cmd.tsn']
-        response = response['frame']             
+        response = response['frame']
 
 
         if hubOK and cmdOK:
                 
-                if int(switch, 16) == 0 and hub['name'] == 'level':
-                        if not (nextHub['name'] == 'switch' and True): #TODO: 시간대 체크
-                                transaction.append('OK(No Switch Log)')
+                if int(switch, 16) == 0 and hub['name'] == 'level' and nextHub['name'] != 'switch':
+                        transaction.append('OK(No Switch Log)')
                                 
                 else:
                         transaction.append('OK')
@@ -409,9 +403,9 @@ def makeTransaction(cmdKey, cmdvalueKey):
                         seqCompare = response['zbee_zcl']['zbee_zcl.cmd.tsn']
                         response = response['frame']
 
+                response_time = datetime.datetime.strptime(response['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
+
                 if seqCompare == cmdSeq:
-                        response_time = datetime.datetime.strptime(response['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
-                        
                         if cmdStr == 'color':
                                 packets.append([trans_idx, response['frame.number'], cmdStr, cmdVal, 'Edge', 'Hub', response_time, 4])
                         else:
@@ -421,6 +415,8 @@ def makeTransaction(cmdKey, cmdvalueKey):
                 elif seqCompare > cmdSeq: # response 쪽 누락
                         transaction[transaction.index('OK')] = 'OK(Sniffing Error)'
                         NG_packets.append([trans_idx, 2])
+
+                hub_db.append([trans_idx, hub['source'], cmdStr, hub['value'], hub_time])
                         
                         
         elif cmdOK:
@@ -467,9 +463,12 @@ def makeTransaction(cmdKey, cmdvalueKey):
                 elif seqCompare > cmdSeq: # reponse 누락
                         transaction.append('OK(Sniffing Error)')
                         NG_packets.append([trans_idx, 2])
+
+                hub_db.append([trans_idx, hub['source'], cmdStr, hub['value'], hub_time])
                                 
 
         transactions.append(transaction)
+        print(transaction)
 
         if cmdOK and change:
                 return cmd_time
@@ -501,7 +500,7 @@ def attributeCheck(command_time, cmdStr, attributes, attrValues):
                 if cmdStr == 'On/Off':
                         resTime = 0.3
                 else:
-                        resTime = 0.6
+                        resTime = 0.8
                 
         
         prevAttr = report_attributes_from_edge[report_idx-1]['zbee_zcl']
@@ -712,7 +711,7 @@ def attributeCheck(command_time, cmdStr, attributes, attrValues):
 
 def errorCheck():
         
-        while hub_idx < len(hubData) or command_idx < len(command_send):
+        while hub_idx < len(hubData) and command_idx < len(command_send):
 
                 time = makeTransaction(command_key, command_value)
                 # check할 필요가 없는 경우 존재함 -> 허브 데이터가 없어도 될 때
@@ -733,11 +732,29 @@ def addSniffingError():
                       transactions[NG[0]-1][-1] = 'OK(Sniffing Error)'
 
 
+def exportLogList(zbee_file, hub_file):
+        filtering_zigbee_zcl(zbee_file)
+
+        removeOverlap(command_send, key_list)
+        removeOverlap(report_attributes_from_edge, key_list)
+        removeOverlap(read_attribute, key_list)
+        removeOverlap(read_attribute_response_from_edge, key_list)
+        removeOverlap(default_response, key_list)
+        removeOverlap(default_response_by_command_from_edge, key_list)
+        removeOverlap(default_response_by_report_from_edge, key_list)
+
+        readHubJson(hub_file)
+
+        errorCheck()
+        addSniffingError()
+                
+        return hub_db, transactions, packets, NG_packets
+
 
 # 디버깅용 출력 함수 ----------------------------------------------------------------------------
 
 # 각 분류된 list 별로 packet 번호출력 및 구분, 디버깅용이므로 나중에 지울예정
-def debuging():
+def debugging():
         
         print(len(command_send))
         print("COMMAND================================")
@@ -788,6 +805,10 @@ def debuging():
                 print(i['frame']['frame.number'])
         print("================================")
 
+        print('hub ==========================================================')
+        for i in hub_db:
+                print(i)
+
         print('transactions =================================================')
         for i in transactions:
                 print(i)
@@ -801,29 +822,5 @@ def debuging():
 
 
 
-# Main 부분 ------------------------------------------------------------------------------------------------------------------------------------------------
-
-command_key = ['zbee_zcl_general.onoff.cmd.srv_rx.id', 'zbee_zcl_general.level_control.cmd.srv_rx.id', 'zbee_zcl_lighting.color_control.cmd.srv_rx.id']
-command_value = ['zbee_zcl_general.level_control.level', 'zbee_zcl_lighting.color_control.color_temp']
-attribute_list = ['zbee_zcl_general.onoff.attr_id', 'zbee_zcl_general.level_control.attr_id', 'zbee_zcl_lighting.color_control.attr_id']
-attribute_values = ['zbee_zcl_general.onoff.attr.onoff', 'zbee_zcl_general.level_control.attr.current_level',
-                    'zbee_zcl_lighting.color_control.attr.color_temperature']
-key_list = ['zbee_zcl', 'zbee_zcl.cmd.tsn']
-
-filtering_zigbee_zcl(get_file(d_file))
-
-removeOverlap(command_send, key_list)
-removeOverlap(report_attributes_from_edge, key_list)
-removeOverlap(read_attribute, key_list)
-removeOverlap(read_attribute_response_from_edge, key_list)
-removeOverlap(default_response, key_list)
-removeOverlap(default_response_by_command_from_edge, key_list)
-removeOverlap(default_response_by_report_from_edge, key_list)
-
-readHubJson(get_file(h_file))
-
-errorCheck()
-addSniffingError()
-debuging()
-
-
+exportLogList('20200603.json', 'hublog.json')
+debugging()

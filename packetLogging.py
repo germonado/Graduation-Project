@@ -1,2 +1,0 @@
-from pcapng import FileScanner
-
