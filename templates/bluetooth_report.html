@@ -19,82 +19,6 @@
   <div class="content-wrapper">
     <div class="container-fluid">
 
-<!--
-	<div class="card mt-3">
-    <div class="card-content">
-        <div class="row row-group m-0">
-            <div class="col-12 col-lg-6 col-xl-3 border-light">
-                <div class="card-body">
-                  <h5 class="text-white mb-0">9526 <span class="float-right"><i class="fa fa-shopping-cart"></i></span></h5>
-                    <div class="progress my-3" style="height:3px;">
-                       <div class="progress-bar" style="width:55%"></div>
-                    </div>
-                  <p class="mb-0 text-white small-font">Total Orders <span class="float-right">+4.2% <i class="zmdi zmdi-long-arrow-up"></i></span></p>
-                </div>
-            </div>
-            <div class="col-12 col-lg-6 col-xl-3 border-light">
-                <div class="card-body">
-                  <h5 class="text-white mb-0">8323 <span class="float-right"><i class="fa fa-usd"></i></span></h5>
-                    <div class="progress my-3" style="height:3px;">
-                       <div class="progress-bar" style="width:55%"></div>
-                    </div>
-                  <p class="mb-0 text-white small-font">Total Revenue <span class="float-right">+1.2% <i class="zmdi zmdi-long-arrow-up"></i></span></p>
-                </div>
-            </div>
-            <div class="col-12 col-lg-6 col-xl-3 border-light">
-                <div class="card-body">
-                  <h5 class="text-white mb-0">6200 <span class="float-right"><i class="fa fa-eye"></i></span></h5>
-                    <div class="progress my-3" style="height:3px;">
-                       <div class="progress-bar" style="width:55%"></div>
-                    </div>
-                  <p class="mb-0 text-white small-font">Visitors <span class="float-right">+5.2% <i class="zmdi zmdi-long-arrow-up"></i></span></p>
-                </div>
-            </div>
-            <div class="col-12 col-lg-6 col-xl-3 border-light">
-                <div class="card-body">
-                  <h5 class="text-white mb-0">5630 <span class="float-right"><i class="fa fa-envira"></i></span></h5>
-                    <div class="progress my-3" style="height:3px;">
-                       <div class="progress-bar" style="width:55%"></div>
-                    </div>
-                  <p class="mb-0 text-white small-font">Messages <span class="float-right">+2.2% <i class="zmdi zmdi-long-arrow-up"></i></span></p>
-                </div>
-            </div>
-        </div>
-    </div>
- </div>  
-	  
-	<div class="row">
-     <div class="col-12 col-lg-8 col-xl-8">
-	    <div class="card">
-		 <div class="card-header">Site Traffic
-		   <div class="card-action">
-			 <div class="dropdown">
-			 <a href="javascript:void();" class="dropdown-toggle dropdown-toggle-nocaret" data-toggle="dropdown">
-			  <i class="icon-options"></i>
-			 </a>
-				<div class="dropdown-menu dropdown-menu-right">
-				<a class="dropdown-item" href="javascript:void();">Action</a>
-				<a class="dropdown-item" href="javascript:void();">Another action</a>
-				<a class="dropdown-item" href="javascript:void();">Something else here</a>
-				<div class="dropdown-divider"></div>
-				<a class="dropdown-item" href="javascript:void();">Separated link</a>
-			   </div>
-			  </div>
-		   </div>
-		 </div>
-		 <div class="card-body">
-		    <ul class="list-inline">
-			  <li class="list-inline-item"><i class="fa fa-circle mr-2 text-white"></i>New Visitor</li>
-			  <li class="list-inline-item"><i class="fa fa-circle mr-2 text-light"></i>Old Visitor</li>
-			</ul>
-			<div class="chart-container-1">
-			  <canvas id="chart1"></canvas>
-			</div>
-		 </div>
-	</div> 
-		</div>
-	 </div>
-		 -->
   <div class = "row">   
      <div class="col-12 col-lg-4 col-xl-4">
         <div class="card">
@@ -125,18 +49,18 @@
                  <tr>
                    <td><i class="fa fa-circle text-white mr-2"></i>ON/OFF</td>
                    <td>TOTAL: {{staList[0][0]}}</td>
-                   <td>Ratio: {{'%.3f'|format(staList[
+                   <td>Ratio: {{'%.1f'|format(staList[
                    0][0]/staList[5]*100)}}%</td>
                  </tr>
                  <tr>
                    <td><i class="fa fa-circle text-light-1 mr-2"></i>Color Temperature</td>
                    <td>TOTAL: {{staList[1][0]}}</td>
-                   <td>Ratio: {{'%.3f'|format(staList[1][0]/staList[5]*100)}}%</td>
+                   <td>Ratio: {{'%.1f'|format(staList[1][0]/staList[5]*100)}}%</td>
                  </tr>
                  <tr>
                    <td><i class="fa fa-circle text-light-2 mr-2"></i>Dim Level</td>
                    <td>TOTAL: {{staList[2][0]}}</td>
-                   <td>Ratio: {{'%.3f'|format(staList[2][0]/staList[5]*100)}}%</td>
+                   <td>Ratio: {{'%.1f'|format(staList[2][0]/staList[5]*100)}}%</td>
                  </tr>
                </tbody>
              </table>
@@ -172,18 +96,18 @@
                  <tr style="color:rgba(247, 140, 151)">
                    <td><i class="fa fa-circle text-white mr-2" style="color:rgba(247, 140, 151) !important"></i>ON/OFF</td>
                    <td>TOTAL: {{staList[0][2]}}</td>
-                   <td>Ratio: {{'%.3f'|format(staList[
+                   <td>Ratio: {{'%.1f'|format(staList[
                    0][2]/staList[3]*100)}}%</td>
                  </tr>
                  <tr style="color:rgba(247, 140, 151)">
                    <td><i class="fa fa-circle text-light-1 mr-2" style="color:rgba(247, 140, 151, 0.70) !important"></i>Color Temperature</td>
                    <td>TOTAL: {{staList[1][2]}}</td>
-                   <td>Ratio: {{'%.3f'|format(staList[1][2]/staList[3]*100)}}%</td>
+                   <td>Ratio: {{'%.1f'|format(staList[1][2]/staList[3]*100)}}%</td>
                  </tr>
                  <tr style="color:rgba(247, 140, 151)">
                    <td><i class="fa fa-circle text-light-2 mr-2" style="color:rgba(247, 140, 151, 0.60) !important"></i>Dim Level</td>
                    <td>TOTAL: {{staList[2][2]}}</td>
-                   <td>Ratio: {{'%.3f'|format(staList[2][2]/staList[3]*100)}}%</td>
+                   <td>Ratio: {{'%.1f'|format(staList[2][2]/staList[3]*100)}}%</td>
                  </tr>
                </tbody>
              </table>
@@ -198,19 +122,16 @@
 		   <div class="col-12 col-lg-4">
 		     <div class="p-3">
 		       <h5 class="mb-0" style="color:#d00000">ON/OFF NG {{staList[0][2]}} </h5>
-			   <small class="mb-0">Overall Visitor <span> <i class="fa fa-arrow-up"></i> 2.43%</span></small>
 		     </div>
 		   </div>
 		   <div class="col-12 col-lg-4">
 		     <div class="p-3">
 		       <h5 class="mb-0" style="color:#d00000">Color Temperatue NG {{staList[1][2]}}</h5>
-			   <small class="mb-0">Visitor Duration <span> <i class="fa fa-arrow-up"></i> 12.65%</span></small>
 		     </div>
 		   </div>
 		   <div class="col-12 col-lg-4">
 		     <div class="p-3">
 		       <h5 class="mb-0" style="color:#d00000">Dim Level NG {{staList[2][2]}}</h5>
-			   <small class="mb-0">Pages/Visit <span> <i class="fa fa-arrow-up"></i> 5.62%</span></small>
 		     </div>
 		   </div>
 		 </div>
@@ -219,19 +140,19 @@
 	<div class="row">
 	 <div class="col-12 col-lg-12">
 	   <div class="card">
-	     <div class="card-header">Bluetooth Connection Report
+	     <div class="card-header">Bluetooth Command Report
 		  <div class="card-action">
              <div class="dropdown">
              <a href="javascript:void();" class="dropdown-toggle dropdown-toggle-nocaret" data-toggle="dropdown">
               <!--<i class="icon-options"></i>-->
-             </a>
-              <div class="dropdown-menu dropdown-menu-right">
-              <a class="dropdown-item" href="javascript:void();">Action</a>
-              <a class="dropdown-item" href="javascript:void();">Another action</a>
-              <a class="dropdown-item" href="javascript:void();">Something else here</a>
-              <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="javascript:void();">Separated link</a>
-               </div>
+              <!--<a class="showpacket" id="showpacket" href="javascript:showPacket();">ALL_PKT</a>-->
+
+              <!--<input class='showpacket'type="button" value="ALL_PKT" onclick="javascript:showPacket();">
+
+             </input>-->
+              <input class='showpacket' type="button" value="ALL_PKT" onclick="zzz()">
+              </input>
+            </a>
               </div>
              </div>
 		 </div>
@@ -252,23 +173,23 @@
                    <tbody>
                      {% for transNum, cmdType, src, dst, success, sndtime, rcvtime in fileList %}
                       {% if success == "Success" %}
-                        <tr style="color:#07c733">
+                        <tr class="should_hide" style="color:#07c733; display: none;">
                           <td>{{transNum}}</td>
                           <td>{{cmdType}}</td>
                           <td>{{src}}</td>
                           <td>
-                            ---->
+                          ------▶
                           </td>
                           <td>{{dst}}</td>
                           <td>{{success}}</td>
                           <td>{{sndtime}}</td>
                         </tr>
-                        <tr style="color:#07c733">
+                        <tr class="should_hide" style="color:#07c733; display: none;">
                           <td></td>
                           <td></td>
                           <td>{{dst}}</td>
                           <td>
-                            <----
+                          ◀------
                           </td>
                           <td>{{src}}</td>
                           <td></td>
@@ -279,23 +200,41 @@
                           <td>{{transNum}}</td>
                           <td>{{cmdType}}</td>
                           <td>{{src}}</td>
-                          <td >
-                           ---->
+                          {% if rcvtime == "No Send Command" %}
+                          <td>
+                          --X--▶
+                          </td>
+                          <td>{{dst}}</td>
+                          <td>{{success}}</td>
+                          <td>{{rcvtime}}</td>
+                          {% else %}
+                          <td>
+                          ------▶
                           </td>
                           <td>{{dst}}</td>
                           <td>{{success}}</td>
                           <td>{{sndtime}}</td>
+                          {% endif %}
                         </tr>
                         <tr style="color:#f78c97">
                           <td></td>
                           <td></td>
                           <td>{{dst}}</td>
+                          {% if rcvtime == "No Response Command" %}
                           <td>
-                            <----
+                          ◀--X--
                           </td>
                           <td>{{src}}</td>
                           <td></td>
                           <td>{{rcvtime}}</td>
+                          {% else %}
+                          <td>
+                          ◀------
+                          </td>
+                          <td>{{src}}</td>
+                          <td></td>
+                          <td>{{sndtime}}</td>
+                          {% endif %}
                         </tr>
                       {% endif %}
                   {% endfor %} 
@@ -424,7 +363,7 @@
         <li id="theme10"></li>
         <li id="theme11"></li>
         <li id="theme12"></li>
-		<li id="theme13"></li>
+		    <li id="theme13"></li>
         <li id="theme14"></li>
         <li id="theme15"></li>
       </ul>
@@ -499,6 +438,18 @@
          }
       }); 
    });
+
+$('.showpacket').click(function(){
+    if(document.querySelector('.showpacket').value === 'ALL_PKT'){
+       $('.should_hide').show();
+       document.querySelector('.showpacket').value = 'ONLY_NG';
+     }
+     else if(document.querySelector('.showpacket').value === 'ONLY_NG'){
+      $('.should_hide').hide();
+      document.querySelector('.showpacket').value = 'ALL_PKT';
+    }
+  });
+
   </script>
 {% endblock %}
 

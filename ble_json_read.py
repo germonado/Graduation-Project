@@ -29,6 +29,16 @@ class BluetoothCheck:
 		self.color_temp_statistics = [0,0,0]
 		self.d_file = './exported_json/ble'
 
+	def initialize(self):
+
+		self.write_req = []
+		self.write_res = []
+		self.report_list = []
+		self.cmd_statistics = []
+		self.onoff_statistics = [0,0,0]
+		self.dim_level_statistics = [0,0,0]
+		self.color_temp_statistics = [0,0,0]
+
 
 	# This function draws file
 	def get_file(self):
@@ -37,7 +47,10 @@ class BluetoothCheck:
 		fileList = [s for s in os.listdir(dirpath)
 			if os.path.isfile(os.path.join(dirpath, s))]
 		fileList.sort(key=lambda s: os.path.getmtime(os.path.join(dirpath, s)), reverse=True)
-		return fileList
+		
+		for f in fileList:
+			self.write_command_extract(f)
+			break
 
 
 	# This function distinguish command type and count for statistics
@@ -72,12 +85,9 @@ class BluetoothCheck:
 		transaction_number = 0
 		ng_count = 0
 		success_count = 0
-		self.color_temp = 0
-		self.onoff = 0
-		self.level_control = 0
+		send_miss = 0
 		resend = len(self.write_res)
 		reqend = len(self.write_req)
-		replacetxt = " 대한민국 표준시"
 		for reqind in range(reqend):
 			# chkfnum has the frame number of write request packet, for checking write response
 			chkfnum = self.write_req[reqind]['frame']['frame.number']
@@ -89,30 +99,57 @@ class BluetoothCheck:
 					flag = 1
 					success_check = "Success"
 					success_count = success_count + 1
-					send_timeinfo = self.write_req[reqind]['frame']['frame.time'].replace(replacetxt,"")
+					send_timeinfo = datetime.datetime.strptime(self.write_req[reqind]['frame']['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
 					send_cmd = UUIDDICT[self.write_req[reqind]['btatt']['btatt.handle_tree']['btatt.uuid128']]
-					receive_timeinfo = self.write_res[restmp]['frame']['frame.time'].replace(replacetxt,"")
+					receive_timeinfo = datetime.datetime.strptime(self.write_res[restmp]['frame']['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
 					src = self.write_req[reqind]['btle']['btle.master_bd_addr']
 					dst = self.write_req[reqind]['btle']['btle.slave_bd_addr']
 					temp_item_send = [transaction_number, send_cmd, src, dst, success_check, send_timeinfo, receive_timeinfo]
 					self.classify_command(send_cmd, success_check)
+					self.report_list.append(temp_item_send)
 					resind = restmp+1
 					break
+
+				elif self.write_res[restmp]['btatt']['btatt.request_in_frame'] < chkfnum:
+					success_check = "NG"
+					ng_count = ng_count + 1
+					send_miss = send_miss + 1
+					send_framenum = self.write_res[resind]['frame']['frame.number']
+					send_timeinfo = datetime.datetime.strptime(self.write_res[resind]['frame']['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
+					send_cmd = UUIDDICT[self.write_res[resind]['btatt']['btatt.handle_tree']['btatt.uuid128']]
+					src = self.write_res[resind]['btle']['btle.master_bd_addr']
+					dst = self.write_res[resind]['btle']['btle.slave_bd_addr']
+					temp_item = [transaction_number, send_cmd, src, dst, success_check, send_timeinfo, "No Send Command"]
+					self.classify_command(send_cmd, success_check)
+					self.report_list.append(temp_item)
+					print(self.write_res[restmp]['btatt']['btatt.request_in_frame'])
+					break
+
 			
 			# 만약 transaction에 대한 response가 돌아오지 않았을때
 			if flag == 0:
 				success_check = "NG"
 				ng_count = ng_count + 1
 				send_framenum = self.write_req[reqind]['frame']['frame.number']
-				send_timeinfo = self.write_req[reqind]['frame']['frame.time'].replace(replacetxt,"")
+				send_timeinfo = datetime.datetime.strptime(self.write_req[reqind]['frame']['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
+				print(send_framenum)
 				send_cmd = UUIDDICT[self.write_req[reqind]['btatt']['btatt.handle_tree']['btatt.uuid128']]
 				src = self.write_req[reqind]['btle']['btle.master_bd_addr']
 				dst = self.write_req[reqind]['btle']['btle.slave_bd_addr']
-				temp_item = [transaction_number, send_cmd, src, dst, success_check, send_timeinfo, "No response"]
+				temp_item = [transaction_number, send_cmd, src, dst, success_check, send_timeinfo, "No Response Command"]
 				self.classify_command(send_cmd, success_check)
 				self.report_list.append(temp_item)
 
-		self.cmd_statistics = [self.onoff_statistics, self.color_temp_statistics, self.dim_level_statistics, ng_count, success_count , len(self.write_req)]
+		print("============write_req====================")
+		for i in self.write_req:
+			print(i['frame']['frame.number'])
+		print("============write_req====================")
+		for i in self.write_res:
+			print(i['frame']['frame.number'])
+		for i in self.report_list:
+			print(i)
+
+		self.cmd_statistics = [self.onoff_statistics, self.color_temp_statistics, self.dim_level_statistics, ng_count, success_count , len(self.write_req)+send_miss]
 		return self.report_list, self.cmd_statistics
 
 
@@ -128,20 +165,23 @@ class BluetoothCheck:
 
 
 	# This function extracts only transaction packet from whole wireshark packet
-	def write_command_extract(self, filelist):
-		for f in filelist:
-			if os.path.splitext(self.d_file + '/' + f)[1] == '.json':
-				json_file = open(self.d_file + '/' + f, encoding="utf8")
-				json_read = json.load(json_file)
-				for x in range(len(json_read)):
-					if json_read[x]['_source']['layers'].get('btatt'):
-						tmp = json_read[x]['_source']['layers']['btatt']
-						# if btatt.opcode number is 12, then this packet is write request packet
-						if tmp['btatt.opcode'] == '0x00000012':
-							if self.write_command_uuid_check(tmp['btatt.handle_tree']):	
-								self.write_req.append(json_read[x]['_source']['layers'])
-						# if btatt.opcode number is 13, then this packet is write response packet
-						elif tmp['btatt.opcode'] == '0x00000013':
-							if self.write_command_uuid_check(tmp['btatt.handle_tree']):	
-								self.write_res.append(json_read[x]['_source']['layers'])
-				json_file.close()
+	def write_command_extract(self, f):
+		
+		self.initialize()
+
+		if os.path.splitext(self.d_file + '/' + f)[1] == '.json':
+			json_file = open(self.d_file + '/' + f, encoding="utf8")
+			json_read = json.load(json_file)
+			for x in range(len(json_read)):
+				if json_read[x]['_source']['layers'].get('btatt'):
+					tmp = json_read[x]['_source']['layers']['btatt']
+					# if btatt.opcode number is 12, then this packet is write request packet
+					if tmp['btatt.opcode'] == '0x00000012':
+						if self.write_command_uuid_check(tmp['btatt.handle_tree']):	
+							self.write_req.append(json_read[x]['_source']['layers'])
+					# if btatt.opcode number is 13, then this packet is write response packet
+					elif tmp['btatt.opcode'] == '0x00000013':
+						if self.write_command_uuid_check(tmp['btatt.handle_tree']):	
+							self.write_res.append(json_read[x]['_source']['layers'])
+			
+			json_file.close()

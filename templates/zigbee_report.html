@@ -1,0 +1,441 @@
+{% extends 'main.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+  <meta name="description" content=""/>
+  <meta name="author" content=""/>
+  <title>UI_for_Report</title>
+</head>
+{% block content %}
+
+<body class="bg-theme bg-theme1">
+ 
+<div class="clearfix"></div>
+	
+  <div class="content-wrapper">
+    <div class="container-fluid">
+
+  <div class = "row">   
+     <div class="col-12 col-lg-4 col-xl-4">
+        <div class="card">
+           <div class="card-header" style="font-size: 20px">Total Command {{staList[5]}}
+             <div class="card-action">
+             <div class="dropdown">
+             <a href="javascript:void();" class="dropdown-toggle dropdown-toggle-nocaret" data-toggle="dropdown">
+              <!--<i class="icon-options"></i>-->
+             </a>
+              <div class="dropdown-menu dropdown-menu-right">
+              <a class="dropdown-item" href="javascript:void();">Action</a>
+              <a class="dropdown-item" href="javascript:void();">Another action</a>
+              <a class="dropdown-item" href="javascript:void();">Something else here</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="javascript:void();">Separated link</a>
+               </div>
+              </div>
+             </div>
+           </div>
+           <div class="card-body">
+		     <div class="chart-container-2">
+               <canvas id="myChart"></canvas>
+			  </div>
+           </div>
+           <div class="table-responsive">
+             <table class="table align-items-center">
+               <tbody>
+                 <tr>
+                   <td><i class="fa fa-circle text-white mr-2"></i>ON/OFF</td>
+                   <td>TOTAL: {{staList[0][0]}}</td>
+                   <td>Ratio: {{'%.1f'|format(staList[
+                   0][0]/staList[5]*100)}}%</td>
+                 </tr>
+                 <tr>
+                   <td><i class="fa fa-circle text-light-1 mr-2"></i>Color Temperature</td>
+                   <td>TOTAL: {{staList[1][0]}}</td>
+                   <td>Ratio: {{'%.1f'|format(staList[1][0]/staList[5]*100)}}%</td>
+                 </tr>
+                 <tr>
+                   <td><i class="fa fa-circle text-light-2 mr-2"></i>Dim Level</td>
+                   <td>TOTAL: {{staList[2][0]}}</td>
+                   <td>Ratio: {{'%.1f'|format(staList[2][0]/staList[5]*100)}}%</td>
+                 </tr>
+               </tbody>
+             </table>
+           </div>
+         </div>
+     </div>
+      <div class="col-12 col-lg-4 col-xl-4">
+        <div class="card">
+           <div class="card-header" style="font-size: 20px; color:#f78c97">Total NG {{staList[3]}}
+             <div class="card-action">
+             <div class="dropdown">
+             <a href="javascript:void();" class="dropdown-toggle dropdown-toggle-nocaret" data-toggle="dropdown">
+             <!-- <i class="icon-options"></i> -->
+             </a>
+              <div class="dropdown-menu dropdown-menu-right">
+              <a class="dropdown-item" href="javascript:void();">Action</a>
+              <a class="dropdown-item" href="javascript:void();">Another action</a>
+              <a class="dropdown-item" href="javascript:void();">Something else here</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="javascript:void();">Separated link</a>
+               </div>
+              </div>
+             </div>
+           </div>
+           <div class="card-body">
+         <div class="chart-container-2">
+               <canvas id="myChart2"></canvas>
+        </div>
+           </div>
+           <div class="table-responsive">
+             <table class="table align-items-center">
+               <tbod>
+                 <tr style="color:rgba(247, 140, 151)">
+                   <td><i class="fa fa-circle text-white mr-2" style="color:rgba(247, 140, 151) !important"></i>ON/OFF</td>
+                   <td>TOTAL: {{staList[0][2]}}</td>
+                   <td>Ratio: {{'%.1f'|format(staList[
+                   0][2]/staList[3]*100)}}%</td>
+                 </tr>
+                 <tr style="color:rgba(247, 140, 151)">
+                   <td><i class="fa fa-circle text-light-1 mr-2" style="color:rgba(247, 140, 151, 0.70) !important"></i>Color Temperature</td>
+                   <td>TOTAL: {{staList[1][2]}}</td>
+                   <td>Ratio: {{'%.1f'|format(staList[1][2]/staList[3]*100)}}%</td>
+                 </tr>
+                 <tr style="color:rgba(247, 140, 151)">
+                   <td><i class="fa fa-circle text-light-2 mr-2" style="color:rgba(247, 140, 151, 0.60) !important"></i>Dim Level</td>
+                   <td>TOTAL: {{staList[2][2]}}</td>
+                   <td>Ratio: {{'%.1f'|format(staList[2][2]/staList[3]*100)}}%</td>
+                 </tr>
+               </tbody>
+             </table>
+           </div>
+         </div>
+     </div>
+  </div>   
+
+
+
+		 <div class="row m-0 row-group text-center border-top border-light-3">
+		   <div class="col-12 col-lg-4">
+		     <div class="p-3">
+		       <h5 class="mb-0" style="color:#d00000">ON/OFF NG {{staList[0][2]}} </h5>
+			   <small class="mb-0">Overall Visitor <span> <i class="fa fa-arrow-up"></i> 2.43%</span></small>
+		     </div>
+		   </div>
+		   <div class="col-12 col-lg-4">
+		     <div class="p-3">
+		       <h5 class="mb-0" style="color:#d00000">Color Temperatue NG {{staList[1][2]}}</h5>
+			   <small class="mb-0">Visitor Duration <span> <i class="fa fa-arrow-up"></i> 12.65%</span></small>
+		     </div>
+		   </div>
+		   <div class="col-12 col-lg-4">
+		     <div class="p-3">
+		       <h5 class="mb-0" style="color:#d00000">Dim Level NG {{staList[2][2]}}</h5>
+			   <small class="mb-0">Pages/Visit <span> <i class="fa fa-arrow-up"></i> 5.62%</span></small>
+		     </div>
+		   </div>
+		 </div>
+		 
+
+	<div class="row">
+	 <div class="col-12 col-lg-12">
+	   <div class="card">
+	     <div class="card-header">Bluetooth Command Report
+		  <div class="card-action">
+             <div class="dropdown">
+             <a href="javascript:void();" class="dropdown-toggle dropdown-toggle-nocaret" data-toggle="dropdown">
+              <!--<i class="icon-options"></i>-->
+              <!--<a class="showpacket" id="showpacket" href="javascript:showPacket();">ALL_PKT</a>-->
+
+              <!--<input class='showpacket'type="button" value="ALL_PKT" onclick="javascript:showPacket();">
+
+             </input>-->
+              <input class='showpacket' type="button" value="ALL_PKT" onclick="zzz()">
+              </input>
+            </a>
+              </div>
+             </div>
+		 </div>
+	       <div class="table-responsive">
+                 <table class="table align-items-center table-flush table-borderless">
+                  <thead>
+                   <tr>
+                     <th>Index</th>
+                     <th>Command Type</th>
+                     <th>Source</th>
+                     <th>Flow</th>
+                     <th>Destination</th>
+                     <th>Success</th>
+                     <th>Send Time</th>
+                     <!-- <th>Receive Time</th>-->
+                   </tr>
+                   </thead>
+                   <tbody>
+                     {% for transNum, cmdType, src, dst, success, sndtime, rcvtime in fileList %}
+                      {% if success == "Success" %}
+                        <tr class="should_hide" style="color:#07c733; display: none;">
+                          <td>{{transNum}}</td>
+                          <td>{{cmdType}}</td>
+                          <td>{{src}}</td>
+                          <td>
+                            ---->
+                          </td>
+                          <td>{{dst}}</td>
+                          <td>{{success}}</td>
+                          <td>{{sndtime}}</td>
+                        </tr>
+                        <tr class="should_hide" style="color:#07c733; display: none;">
+                          <td></td>
+                          <td></td>
+                          <td>{{dst}}</td>
+                          <td>
+                            <----
+                          </td>
+                          <td>{{src}}</td>
+                          <td></td>
+                          <td>{{rcvtime}}</td>
+                        </tr>
+                      {% else %}
+                        <tr style="color:#f78c97">
+                          <td>{{transNum}}</td>
+                          <td>{{cmdType}}</td>
+                          <td>{{src}}</td>
+                          <td >
+                           ---->
+                          </td>
+                          <td>{{dst}}</td>
+                          <td>{{success}}</td>
+                          <td>{{sndtime}}</td>
+                        </tr>
+                        <tr style="color:#f78c97">
+                          <td></td>
+                          <td></td>
+                          <td>{{dst}}</td>
+                          <td>
+                            <----
+                          </td>
+                          <td>{{src}}</td>
+                          <td></td>
+                          <td>{{rcvtime}}</td>
+                        </tr>
+                      {% endif %}
+                  {% endfor %} 
+                   <!-- <tr>
+                    <td>Iphone 5</td>
+                    <td><img src="https://via.placeholder.com/110x110" class="product-img" alt="product img"></td>
+                    <td>#9405822</td>
+                    <td>$ 1250.00</td>
+                    <td>03 Aug 2017</td>
+					<td><div class="progress shadow" style="height: 3px;">
+                          <div class="progress-bar" role="progressbar" style="width: 90%"></div>
+                        </div></td>
+                   </tr>
+
+                   <tr>
+                    <td>Earphone GL</td>
+                    <td><img src="https://via.placeholder.com/110x110" class="product-img" alt="product img"></td>
+                    <td>#9405820</td>
+                    <td>$ 1500.00</td>
+                    <td>03 Aug 2017</td>
+					<td><div class="progress shadow" style="height: 3px;">
+                          <div class="progress-bar" role="progressbar" style="width: 60%"></div>
+                        </div></td>
+                   </tr>
+
+                   <tr>
+                    <td>HD Hand Camera</td>
+                    <td><img src="https://via.placeholder.com/110x110" class="product-img" alt="product img"></td>
+                    <td>#9405830</td>
+                    <td>$ 1400.00</td>
+                    <td>03 Aug 2017</td>
+					<td><div class="progress shadow" style="height: 3px;">
+                          <div class="progress-bar" role="progressbar" style="width: 70%"></div>
+                        </div></td>
+                   </tr>
+
+                   <tr>
+                    <td>Clasic Shoes</td>
+                    <td><img src="https://via.placeholder.com/110x110" class="product-img" alt="product img"></td>
+                    <td>#9405825</td>
+                    <td>$ 1200.00</td>
+                    <td>03 Aug 2017</td>
+					<td><div class="progress shadow" style="height: 3px;">
+                          <div class="progress-bar" role="progressbar" style="width: 100%"></div>
+                        </div></td>
+                   </tr>
+
+                   <tr>
+                    <td>Hand Watch</td>
+                    <td><img src="https://via.placeholder.com/110x110" class="product-img" alt="product img"></td>
+                    <td>#9405840</td>
+                    <td>$ 1800.00</td>
+                    <td>03 Aug 2017</td>
+					<td><div class="progress shadow" style="height: 3px;">
+                          <div class="progress-bar" role="progressbar" style="width: 40%"></div>
+                        </div></td>
+                   </tr>
+				   
+				   <tr>
+                    <td>Clasic Shoes</td>
+                    <td><img src="https://via.placeholder.com/110x110" class="product-img" alt="product img"></td>
+                    <td>#9405825</td>
+                    <td>$ 1200.00</td>
+                    <td>03 Aug 2017</td>
+					<td><div class="progress shadow" style="height: 3px;">
+                          <div class="progress-bar" role="progressbar" style="width: 100%"></div>
+                        </div></td>
+                   </tr>
+                  -->
+                 </tbody></table>
+               </div>
+	   </div>
+	 </div>
+	</div><!--End Row-->
+
+      <!--End Dashboard Content-->
+	  
+	<!--start overlay-->
+		  <div class="overlay toggle-menu"></div>
+		<!--end overlay-->
+		
+    </div>
+    <!-- End container-fluid-->
+    
+    </div><!--End content-wrapper-->
+   <!--Start Back To Top Button-->
+    <a href="javaScript:void();" class="back-to-top"><i class="fa fa-angle-double-up"></i> </a>
+    <!--End Back To Top Button-->
+	
+	<!--Start footer-->
+	<footer class="footer">
+      <div class="container">
+        <div class="text-center">
+          Copyright © 2018 Dashtreme Admin
+        </div>
+      </div>
+    </footer>
+	<!--End footer-->
+	
+  <!--start color switcher-->
+   <div class="right-sidebar">
+    <div class="switcher-icon">
+      <i class="zmdi zmdi-settings zmdi-hc-spin"></i>
+    </div>
+    <div class="right-sidebar-content">
+
+      <p class="mb-0">Gaussion Texture</p>
+      <hr>
+      
+      <ul class="switcher">
+        <li id="theme1"></li>
+        <li id="theme2"></li>
+        <li id="theme3"></li>
+        <li id="theme4"></li>
+        <li id="theme5"></li>
+        <li id="theme6"></li>
+      </ul>
+
+      <p class="mb-0">Gradient Background</p>
+      <hr>
+      
+      <ul class="switcher">
+        <li id="theme7"></li>
+        <li id="theme8"></li>
+        <li id="theme9"></li>
+        <li id="theme10"></li>
+        <li id="theme11"></li>
+        <li id="theme12"></li>
+		    <li id="theme13"></li>
+        <li id="theme14"></li>
+        <li id="theme15"></li>
+      </ul>
+      
+     </div>
+   </div>
+  <!--end color switcher-->
+   
+  </div><!--End wrapper-->
+  <script type="text/javascript">
+    window.onload = $(function(){  
+    var ctx = document.getElementById('myChart').getContext('2d');
+      var myChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ["ON/OFF", "Color Temperature", "Dim Level"],
+          datasets: [{
+            backgroundColor: [
+              "#ffffff",
+              "rgba(255, 255, 255, 0.70)",
+              "rgba(255, 255, 255, 0.50)",
+            ],
+            data: ['{{staList[0][0]}}', '{{staList[1][0]}}', '{{staList[2][0]}}'],
+            borderWidth: [0, 0, 0]
+          }]
+        },
+      options: {
+        maintainAspectRatio: false,
+         legend: {
+         position :"bottom",  
+         display: false,
+            labels: {
+            fontColor: '#ddd',  
+            boxWidth:15
+           }
+        }
+        ,
+        tooltips: {
+          displayColors:false
+        }
+         }
+      });
+    var ctx2 = document.getElementById('myChart2').getContext('2d');
+      var myChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: ["ON/OFF", "Color Temperature", "Dim Level"],
+          datasets: [{
+            backgroundColor: [
+              "#f78c97",
+              "rgba(247, 140, 151, 0.70)",
+              "rgba(247, 140, 151, 0.50)",
+            ],
+            data: ['{{staList[0][2]}}', '{{staList[1][2]}}', '{{staList[2][2]}}'],
+            borderWidth: [0, 0, 0]
+          }]
+        },
+      options: {
+        maintainAspectRatio: false,
+         legend: {
+         position :"bottom",  
+         display: false,
+            labels: {
+            fontColor: '#ddd',  
+            boxWidth:15
+           }
+        }
+        ,
+        tooltips: {
+          displayColors:false
+        }
+         }
+      }); 
+   });
+
+$('.showpacket').click(function(){
+    if(document.querySelector('.showpacket').value === 'ALL_PKT'){
+       $('.should_hide').show();
+       document.querySelector('.showpacket').value = 'ONLY_NG';
+     }
+     else if(document.querySelector('.showpacket').value === 'ONLY_NG'){
+      $('.should_hide').hide();
+      document.querySelector('.showpacket').value = 'ALL_PKT';
+    }
+  });
+
+  </script>
+{% endblock %}
+
+</body>
+</html>
