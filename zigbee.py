@@ -55,6 +55,7 @@ reportResToHub_idx = 0 # report response 중 허브 방향 index (<-)
 on_time = 0.7
 level_time = 0.85
 color_time = 2.7
+cmd_first_time = ''
 
 switch = '1'
 level = ''
@@ -76,94 +77,94 @@ key_list = ['zbee_zcl', 'zbee_zcl.cmd.tsn']
 
 #최초 command가 실행되기 이전의 주고 받은 packet들은 다 initialization이므로 filtering
 def filtering_based_by_command():
-	for i in report_attributes_from_edge[:]:
-		if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
-			del report_attributes_from_edge[report_attributes_from_edge.index(i)]
+        for i in report_attributes_from_edge[:]:
+                if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
+                        del report_attributes_from_edge[report_attributes_from_edge.index(i)]
 
-	for i in read_attribute[:]:
-		if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
-			del read_attribute[read_attribute.index(i)]
+        for i in read_attribute[:]:
+                if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
+                        del read_attribute[read_attribute.index(i)]
 
-	for i in read_attribute_response_from_edge[:]:
-		if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
-			del read_attribute_response_from_edge[read_attribute_response_from_edge.index(i)]
+        for i in read_attribute_response_from_edge[:]:
+                if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
+                        del read_attribute_response_from_edge[read_attribute_response_from_edge.index(i)]
 
-	for i in default_response[:]:
-		if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
-			del default_response[default_response.index(i)]
+        for i in default_response[:]:
+                if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
+                        del default_response[default_response.index(i)]
 
-	for i in default_response_by_report_from_edge[:]:
-		if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
-			del default_response_by_report_from_edge[default_response_by_report_from_edge.index(i)]
+        for i in default_response_by_report_from_edge[:]:
+                if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
+                        del default_response_by_report_from_edge[default_response_by_report_from_edge.index(i)]
 
-	for i in default_response_by_command_from_edge[:]:
-		if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
-			del default_response_by_command_from_edge[default_response_by_command_from_edge.index(i)]
+        for i in default_response_by_command_from_edge[:]:
+                if i['frame']['frame.number'] < command_send[0]['frame']['frame.number']:
+                        del default_response_by_command_from_edge[default_response_by_command_from_edge.index(i)]
 
 
 #This function filters packets as follow zigbee protocols
 def filtering_zigbee_zcl(file):
-	
-		if os.path.splitext(d_file + '/' + file)[1] == '.json':
-			json_file = open(d_file + '/' + file, encoding="utf8")
-			json_read = json.load(json_file)
-			
-			for x in range(len(json_read)):
-				if json_read[x]['_source']['layers'].get('zbee_zcl'):
-					
-					# Sender > Edge 로 보내는 Command
-					# This if statement distinguishes command packet by Cluster-specific 0x01
-					if json_read[x]['_source']['layers']['zbee_zcl'].get('Frame Control Field: Cluster-specific (0x01)'):
-						# 각 명령어 별로 해당하는 3가지 종류의 command인지 확인 후 list append
-						if json_read[x]['_source']['layers']['zbee_zcl'].get('zbee_zcl_general.level_control.cmd.srv_rx.id'):
-							command_send.append(json_read[x]['_source']['layers'])
-						elif json_read[x]['_source']['layers']['zbee_zcl'].get('zbee_zcl_general.onoff.cmd.srv_rx.id'):
-							command_send.append(json_read[x]['_source']['layers'])
-						elif json_read[x]['_source']['layers']['zbee_zcl'].get('zbee_zcl_lighting.color_control.cmd.srv_rx.id'):
-							command_send.append(json_read[x]['_source']['layers'])
-					
-					# Edge > Sender 로 날아오는 packet 들		
-					# This elif statement distinguishes default reponse from edge by Profile-wide 0x18
-					elif json_read[x]['_source']['layers']['zbee_zcl'].get('Frame Control Field: Profile-wide (0x18)'):
+        
+                if os.path.splitext(d_file + '/' + file)[1] == '.json':
+                        json_file = open(d_file + '/' + file, encoding="utf8")
+                        json_read = json.load(json_file)
+                        
+                        for x in range(len(json_read)):
+                                if json_read[x]['_source']['layers'].get('zbee_zcl'):
+                                        
+                                        # Sender > Edge 로 보내는 Command
+                                        # This if statement distinguishes command packet by Cluster-specific 0x01
+                                        if json_read[x]['_source']['layers']['zbee_zcl'].get('Frame Control Field: Cluster-specific (0x01)'):
+                                                # 각 명령어 별로 해당하는 3가지 종류의 command인지 확인 후 list append
+                                                if json_read[x]['_source']['layers']['zbee_zcl'].get(command_key[0]):
+                                                        command_send.append(json_read[x]['_source']['layers'])
+                                                elif json_read[x]['_source']['layers']['zbee_zcl'].get(command_key[1]):
+                                                        command_send.append(json_read[x]['_source']['layers'])
+                                                elif json_read[x]['_source']['layers']['zbee_zcl'].get(command_key[2]):
+                                                        command_send.append(json_read[x]['_source']['layers'])
+                                        
+                                        # Edge > Sender 로 날아오는 packet 들		
+                                        # This elif statement distinguishes default reponse from edge by Profile-wide 0x18
+                                        elif json_read[x]['_source']['layers']['zbee_zcl'].get('Frame Control Field: Profile-wide (0x18)'):
                         
                         # This statement distinguishes default response by command or report                        
-						if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id'] == "11":
-							
-							# Response to Command 값이 0x0b 인경우는 Report Attribute에 의해서 만들어진 Default Response
-							if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id.rsp'] == "0x0000000b":
-								default_response_by_report_from_edge.append(json_read[x]['_source']['layers'])
-							
-							# 그게 아닌 경우 command에 의한 Default Response
-							else:
-								default_response_by_command_from_edge.append(json_read[x]['_source']['layers'])
+                                                if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id'] == "11":
+                                                        
+                                                        # Response to Command 값이 0x0b 인경우는 Report Attribute에 의해서 만들어진 Default Response
+                                                        if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id.rsp'] == "0x0000000b":
+                                                                default_response_by_report_from_edge.append(json_read[x]['_source']['layers'])
+                                                        
+                                                        # 그게 아닌 경우 command에 의한 Default Response
+                                                        else:
+                                                                default_response_by_command_from_edge.append(json_read[x]['_source']['layers'])
 
-						# Color control에서 발생하는 read_attribute response				
-						elif json_read[x]['_source']['layers']['zbee_zcl'].get('Status Record'):
-							if json_read[x]['_source']['layers']['zbee_zcl']['Status Record'].get('zbee_zcl_lighting.color_control.attr_id'):
-								if json_read[x]['_source']['layers']['zbee_zcl']['Status Record']['zbee_zcl_lighting.color_control.attr_id'] == "0x00000007":
-									read_attribute_response_from_edge.append(json_read[x]['_source']['layers'])
+                                                # Color control에서 발생하는 read_attribute response				
+                                                elif json_read[x]['_source']['layers']['zbee_zcl'].get('Status Record'):
+                                                        if json_read[x]['_source']['layers']['zbee_zcl']['Status Record'].get(attribute_list[2]):
+                                                                if json_read[x]['_source']['layers']['zbee_zcl']['Status Record'][attribute_list[2]] == "0x00000007":
+                                                                        read_attribute_response_from_edge.append(json_read[x]['_source']['layers'])
 
-					# Sender > Edge 로 가는 pakcet					
-					elif json_read[x]['_source']['layers']['zbee_zcl'].get('Frame Control Field: Profile-wide (0x00)'):
+                                        # Sender > Edge 로 가는 pakcet					
+                                        elif json_read[x]['_source']['layers']['zbee_zcl'].get('Frame Control Field: Profile-wide (0x00)'):
                                         
                         # On/Off, Color Control에 대해 sender > edge default response                         
-						if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id'] == "11":
-							default_response.append(json_read[x]['_source']['layers'])	
-						
-						# Color control에서 발생하는 read_attribute request(sender쪽)
-						if json_read[x]['_source']['layers']['zbee_zcl'].get('zbee_zcl_lighting.color_control.attr_id'):
-							if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl_lighting.color_control.attr_id'] == "0x00000007":
-								read_attribute.append(json_read[x]['_source']['layers'])
-					
-					# Edge에서 날아오는 Report attributes 
-					elif json_read[x]['_source']['layers']['zbee_zcl'].get('Frame Control Field: Profile-wide (0x08)'):
-						
-						# This if statement distinguishes report_attribute from edge
-						if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id'] == "10":
-							report_attributes_from_edge.append(json_read[x]['_source']['layers'])
+                                                if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id'] == "11":
+                                                        default_response.append(json_read[x]['_source']['layers'])	
+                                                
+                                                # Color control에서 발생하는 read_attribute request(sender쪽)
+                                                if json_read[x]['_source']['layers']['zbee_zcl'].get(attribute_list[2]):
+                                                        if json_read[x]['_source']['layers']['zbee_zcl'][attribute_list[2]] == "0x00000007":
+                                                                read_attribute.append(json_read[x]['_source']['layers'])
+                                        
+                                        # Edge에서 날아오는 Report attributes 
+                                        elif json_read[x]['_source']['layers']['zbee_zcl'].get('Frame Control Field: Profile-wide (0x08)'):
+                                                
+                                                # This if statement distinguishes report_attribute from edge
+                                                if json_read[x]['_source']['layers']['zbee_zcl']['zbee_zcl.cmd.id'] == "10":
+                                                        report_attributes_from_edge.append(json_read[x]['_source']['layers'])
 
-			#filtering_based_by_command()				
-			json_file.close()
+                        filtering_based_by_command()				
+                        json_file.close()
 
 # 동일한 sequence 번호를 갖는 중복 패킷 제거
 def removeOverlap(json_list, keyList):
@@ -180,7 +181,7 @@ def removeOverlap(json_list, keyList):
 def readHubJson(fileName):
         json_file = open(h_file + '/' + fileName, encoding="utf8")
         json_read = json.load(json_file)
-		
+                
         for i in reversed(json_read):
                 hubData.append(i)
 
@@ -200,13 +201,7 @@ def makeTransaction(cmdKey, cmdvalueKey):
         global cmdVal, cmdStr
         global switch, color, level
 
-
         transaction = [] # 트랜잭션 번호, NG여부(Warning 포함), 커맨드, 커맨드값
-
-        if not (packets and packets[-1][-1] >= 7):
-                trans_idx += 1
-        
-        transaction.append(trans_idx)
 
         # 커맨드 패킷 리스트의 follow를 위한 변수
         cmdFrame = command_send[command_idx]['frame'] # 프레임 번호, 시간기록용
@@ -237,7 +232,25 @@ def makeTransaction(cmdKey, cmdvalueKey):
         #1 hub와 command 비교: 시간대를 보면서 더 이른 쪽에 인덱스 증가, 늦은 쪽은 인덱스 유지, 같은 명령어에 시간대 이내면 두 인덱스 증가
         hub_time = datetime.datetime.strptime(hub['date'].replace('오후', 'PM').replace('오전', 'AM'), '%Y-%m-%d %I:%M:%S.%f %p KST')
         cmd_time = datetime.datetime.strptime(cmdFrame['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
+        
         diff = timedelta2float(hub_time - cmd_time)
+
+        if hub_time < cmd_first_time:
+                if hub['name'] == 'switch':
+                        switch = hub['value']
+
+                elif hub['name'] == 'level':
+                        level = hub['value']
+
+                elif hub['name'] == 'colorTemperature':
+                        color = hub['value']
+
+                hub_idx += 1
+                return
+
+        if not (packets and packets[-1][-1] == 9):
+                trans_idx += 1
+        
 
 
         if hub['name'] == 'switch':
@@ -317,18 +330,13 @@ def makeTransaction(cmdKey, cmdvalueKey):
                         cmdStr = 'temp'
                         cmdOK = True
                                 
-                                
+
+
+
+        transaction.append(trans_idx)
         transaction.append(cmdStr)
-
-        if cmdStr == 'color': # 직전 커맨드 패킷이 on인지 확인하고, 아니면 1번 NG
-                color = cmdVal
-
-                if not prevCmd.get(cmdKey[0]):
-                        NG_packets.append([trans_idx, 1])
-                        
-                if len(packets) > 1 and packets[-2][-1] == 1 and (packets[-1][2] != 'color' or packets[-1][-1] != 2):
-                        NG_packets.append([trans_idx, 2])
-                        
+        
+        
 
         change = True
         
@@ -385,6 +393,17 @@ def makeTransaction(cmdKey, cmdvalueKey):
 
         else:
                 transaction.append(cmdVal)
+
+                
+
+        if cmdStr == 'color': # 직전 커맨드 패킷이 on인지 확인하고, 아니면 1번 NG
+                color = cmdVal
+
+                if not prevCmd.get(cmdKey[0]):
+                        NG_packets.append([trans_idx, 1])
+                        
+                if len(packets) > 1 and packets[-2][-1] == 1 and (packets[-1][2] != 'color' or packets[-1][-1] != 2):
+                        NG_packets.append([trans_idx, 2])
                         
                 
         #2 OK/NG 체크: 허브나 패킷 둘다 있으면 OK, 둘 중 하나만 있으면 Warning, 둘 다 없으면 NG
@@ -765,17 +784,11 @@ def attributeCheck(command_time, cmdStr, attributes, attrValues):
 def errorCheck():
         
         while hub_idx < len(hubData) and command_idx < len(command_send):
-
                 time = makeTransaction(command_key, command_value)
-                # check할 필요가 없는 경우 존재함 -> 허브 데이터가 없어도 될 때
-                # color 앞의 on, 값이 이전과 다르지 않은 커맨드 날라올 때
                 
                 if time != None:
                         attributeCheck(time, cmdStr, attribute_list, attribute_values)
-
-                # 시간이 return될 때, None인 경우는 on-color의 on, level 다음 on
-
-
+                        
 
 def addSniffingError():
         global transactions
@@ -786,6 +799,8 @@ def addSniffingError():
 
 
 def exportLogList(zbee_file, hub_file):
+        global cmd_first_time
+        
         filtering_zigbee_zcl(zbee_file)
 
         removeOverlap(command_send, key_list)
@@ -795,6 +810,9 @@ def exportLogList(zbee_file, hub_file):
         removeOverlap(default_response, key_list)
         removeOverlap(default_response_by_command_from_edge, key_list)
         removeOverlap(default_response_by_report_from_edge, key_list)
+
+        cmd_first_time = datetime.datetime.strptime(command_send[0]['frame']['frame.time'],
+                                            '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
 
         readHubJson(hub_file)
 
@@ -876,5 +894,5 @@ def debugging():
 
 
 
-#exportLogList('20200930.json', '20200930.json')
-#debugging()
+exportLogList('20200904.json', '20200904.json')
+debugging()

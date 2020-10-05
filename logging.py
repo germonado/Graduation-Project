@@ -1,8 +1,8 @@
 # ble_json_read와 zigbee_json_read에서 만들어진 list들을 db에 로깅하는 모듈
 import os,sys
 import pymysql
-import zigbee_json_read as zb
-import ble_json_read as ble
+import zigbee as zb
+import bluetooth as ble
 
 p_file = './exported_json/zigbee'
 h_file = './exported_json/hub'
