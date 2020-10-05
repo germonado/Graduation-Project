@@ -1,8 +1,8 @@
 # ble_json_read와 zigbee_json_read에서 만들어진 list들을 db에 로깅하는 모듈
 import os,sys
 import pymysql
-import zigbee_json_read as zb
-import ble_json_read as ble
+import zigbee
+import bluetooth
 
 p_file = './exported_json/zigbee'
 h_file = './exported_json/hub'
@@ -72,19 +72,18 @@ def zbeeToDB(packetFiles, hubFiles):
                        db='zigbee', charset='utf8')
 
     curs = conn.cursor()
-    print(packetFiles, hubFiles)
 
     try:
         for file_idx in range(len(packetFiles)):
             packet = packetFiles[file_idx]
             hub = hubFiles[file_idx]
-            
-            print(packet, hub)
 
             hub_db = []
             transactions = []
             packets = []
             NG_packets = []
+
+            zb = zigbee.ZigbeeCheck()
             
             hub_db, transactions, packets, NG_packets = zb.exportLogList(packet, hub)
 
@@ -94,7 +93,7 @@ def zbeeToDB(packetFiles, hubFiles):
             for t in transactions:
                 sql = 'insert ignore into transaction_zigbee values (%s, %s, %s, %s, %s)'
                 t.insert(0, file_idx)
-                print(t)
+                
 
                 if '0x' in t[3]:
                     t[3] = int(t[3], 16)
@@ -127,11 +126,19 @@ def zbeeToDB(packetFiles, hubFiles):
                 sql = 'insert ignore into packet_zigbee values(%s, %s, %s, %s, %s, %s, %s, %s, %s)'
                 p.insert(0, file_idx)
 
+
                 if '0x' in p[4]:
                     p[4] = int(p[4], 16)
 
+                elif 'on' in p[4]:
+                    p[4] = 1
+
+                elif 'off' in p[4]:
+                    p[4] = 0
+                    
                 else:
                     p[4] = int(p[4])
+                    
                         
                 p = tuple(p)
                 curs.execute(sql, p)
