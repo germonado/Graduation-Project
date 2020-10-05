@@ -152,5 +152,5 @@ def zbeeToDB(packetFiles, hubFiles):
 
 # 모듈 사용 --------------------------------------------------------------
 
-bleToDB(get_file(b_file))
-zbeeToDB(get_file(p_file), get_file(h_file))
+#bleToDB(get_file(b_file))
+#zbeeToDB(get_file(p_file), get_file(h_file))
