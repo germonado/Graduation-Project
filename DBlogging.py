@@ -2,7 +2,7 @@
 import os,sys
 import pymysql
 import zigbee
-import bluetooth
+import bluetooth as ble
 
 p_file = './exported_json/zigbee'
 h_file = './exported_json/hub'
@@ -18,7 +18,6 @@ def get_file(dirpath):
     return fileList
 
 
-
 def bleToDB(packetFiles):
     conn = pymysql.connect(host='localhost', user='root', password='wlalsl4fkd.',
                        db='ble', charset='utf8')
@@ -29,41 +28,30 @@ def bleToDB(packetFiles):
     try:
         for packet in packetFiles:
 
-            b = ble.BluetoothCheck(packet)
-            b.write_command_extract()
-            ble_list, cmd_statistics = b.write_command_succeed_check()
+            b = ble.BluetoothCheck()
+            b.write_command_extract(packet)
+            transactions, cmd_statistics, NG_packets = b.write_command_succeed_check()
 
-            #TODO: DB 모델 바꾸거나 transactions, packets, NG_packets로 수정
-
-            sql = 'insert ignore into file_zigbee values (%s, %s)'
+            sql = 'insert ignore into file_ble values (%s, %s)'
             curs.execute(sql, (file_idx, packet))
 
             for t in transactions:
-                sql = 'insert ignore into transaction_zigbee values (%s, %s, %s, %s, %s)'
+                sql = 'insert ignore into transaction_ble values (%s, %s, %s, %s, %s, %s, %s, %s)'
                 t.insert(0, file_idx)
                 t = tuple(t)
                 curs.execute(sql, t)
-                    
-
-            for p in packets:
-                sql = 'insert ignore into packet_zigbee values(%s, %s, %s, %s, %s, %s, %s, %s, %s)'
-                p.insert(0, file_idx)
-                p = tuple(p)
-                curs.execute(sql, p)
-
 
             for ng in NG_packets:
-                sql = 'insert ignore into ng_zigbee values (%s, %s, %s)'
+                sql = 'insert ignore into ng_ble values (%s, %s, %s)'
                 ng.insert(0, file_idx)
                 ng = tuple(ng)
                 curs.execute(sql, ng)
-
             
-            conn.commit()
             file_idx += 1
 
 
     finally:
+        conn.commit()
         conn.close()
     
 
@@ -151,8 +139,6 @@ def zbeeToDB(packetFiles, hubFiles):
                     
                 ng = tuple(ng)
                 curs.execute(sql, ng)
-
-            
             
             file_idx += 1
 
@@ -167,4 +153,4 @@ def zbeeToDB(packetFiles, hubFiles):
 # 모듈 사용 --------------------------------------------------------------
 
 bleToDB(get_file(b_file))
-#zbeeToDB(get_file(p_file), get_file(h_file))
+zbeeToDB(get_file(p_file), get_file(h_file))
