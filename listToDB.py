@@ -18,7 +18,6 @@ def get_file(dirpath):
     return fileList
 
 
-'''
 def bleToDB(packetFiles):
     conn = pymysql.connect(host='localhost', user='root', password='wlalsl4fkd.',
                        db='ble', charset='utf8')
@@ -29,17 +28,17 @@ def bleToDB(packetFiles):
     try:
         for packet in packetFiles:
 
-            b = ble.BluetoothCheck(packet)
-            b.write_command_extract()
-            ble_list, cmd_statistics = b.write_command_succeed_check()
+            b = ble.BluetoothCheck()
+            b.write_command_extract(packet)
+            ble_list, cmd_statistics, ng_list = b.write_command_succeed_check()
 
             #TODO: DB 모델 바꾸거나 transactions, packets, NG_packets로 수정
 
-            sql = 'insert ignore into file_zigbee values (%s, %s)'
+            sql = 'insert ignore into file_ble values (%s, %s)'
             curs.execute(sql, (file_idx, packet))
 
-            for t in transactions:
-                sql = 'insert ignore into transaction_zigbee values (%s, %s, %s, %s, %s)'
+            for t in ble_list:
+                sql = 'insert ignore into packet_ble values (%s, %s, %s, %s, %s)'
                 t.insert(0, file_idx)
                 t = tuple(t)
                 curs.execute(sql, t)
@@ -65,8 +64,8 @@ def bleToDB(packetFiles):
 
     finally:
         conn.close()
-    
-'''
+
+
 
 def zbeeToDB(packetFiles, hubFiles):
     conn = pymysql.connect(host='localhost', user='root', password='wlalsl4fkd.',

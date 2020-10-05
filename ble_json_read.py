@@ -20,6 +20,7 @@ class BluetoothCheck:
 	
 
 	def __init__(self):
+		
 		self.write_req = []
 		self.write_res = []
 		self.report_list = []
@@ -27,7 +28,9 @@ class BluetoothCheck:
 		self.onoff_statistics = [0,0,0]
 		self.dim_level_statistics = [0,0,0]
 		self.color_temp_statistics = [0,0,0]
+		self.ng_list = []
 		self.d_file = './exported_json/ble'
+
 
 	def initialize(self):
 
@@ -38,6 +41,7 @@ class BluetoothCheck:
 		self.onoff_statistics = [0,0,0]
 		self.dim_level_statistics = [0,0,0]
 		self.color_temp_statistics = [0,0,0]
+		self.ng_list = []
 
 
 	# This function draws file
@@ -48,9 +52,10 @@ class BluetoothCheck:
 			if os.path.isfile(os.path.join(dirpath, s))]
 		fileList.sort(key=lambda s: os.path.getmtime(os.path.join(dirpath, s)), reverse=True)
 		
-		for f in fileList:
-			self.write_command_extract(f)
-			break
+		return fileList
+		#for f in fileList:
+		#	self.write_command_extract(f)
+		#	break
 
 
 	# This function distinguish command type and count for statistics
@@ -111,6 +116,7 @@ class BluetoothCheck:
 					break
 
 				elif self.write_res[restmp]['btatt']['btatt.request_in_frame'] < chkfnum:
+					#flag = 1
 					success_check = "NG"
 					ng_count = ng_count + 1
 					send_miss = send_miss + 1
@@ -119,9 +125,13 @@ class BluetoothCheck:
 					send_cmd = UUIDDICT[self.write_res[resind]['btatt']['btatt.handle_tree']['btatt.uuid128']]
 					src = self.write_res[resind]['btle']['btle.master_bd_addr']
 					dst = self.write_res[resind]['btle']['btle.slave_bd_addr']
-					temp_item = [transaction_number, send_cmd, src, dst, success_check, send_timeinfo, "No Send Command"]
+					temp_item = [transaction_number, send_cmd, src, dst, success_check, send_timeinfo, "1(No Command Send)"]
+					transaction_number += 1
 					self.classify_command(send_cmd, success_check)
 					self.report_list.append(temp_item)
+					# For ng list logging with transaction number and error explanation
+					ng_item = [transaction_number, 1]
+					self.ng_list.append(ng_item)
 					print(self.write_res[restmp]['btatt']['btatt.request_in_frame'])
 					break
 
@@ -132,13 +142,15 @@ class BluetoothCheck:
 				ng_count = ng_count + 1
 				send_framenum = self.write_req[reqind]['frame']['frame.number']
 				send_timeinfo = datetime.datetime.strptime(self.write_req[reqind]['frame']['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
-				print(send_framenum)
 				send_cmd = UUIDDICT[self.write_req[reqind]['btatt']['btatt.handle_tree']['btatt.uuid128']]
 				src = self.write_req[reqind]['btle']['btle.master_bd_addr']
 				dst = self.write_req[reqind]['btle']['btle.slave_bd_addr']
-				temp_item = [transaction_number, send_cmd, src, dst, success_check, send_timeinfo, "No Response Command"]
+				temp_item = [transaction_number, send_cmd, src, dst, success_check, send_timeinfo, "2(No Command Response)"]
 				self.classify_command(send_cmd, success_check)
 				self.report_list.append(temp_item)
+				# For ng list logging with transaction number and error explanation
+				ng_item = [transaction_number, 2]
+				self.ng_list.append(ng_item)
 
 		print("============write_req====================")
 		for i in self.write_req:
@@ -150,7 +162,7 @@ class BluetoothCheck:
 			print(i)
 
 		self.cmd_statistics = [self.onoff_statistics, self.color_temp_statistics, self.dim_level_statistics, ng_count, success_count , len(self.write_req)+send_miss]
-		return self.report_list, self.cmd_statistics
+		return self.report_list, self.cmd_statistics, self.ng_list
 
 
 	# This function checks if transaction packet is subset of valid service UUID
