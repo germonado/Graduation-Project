@@ -48,11 +48,27 @@ class DB_LOAD:
 			sql = 'select file_number from file_ble where file_name=(%s)'
 			file_number = curs.execute(sql, (file))
 
+<<<<<<< HEAD
+=======
+			sql = 'select * from ng_ble where file_number=(%s)'
+			curs.execute(sql, (file_number))
+			ble_ng_list = curs.fetchall()
+
+			sql = 'select * from transaction_ble where file_number=(%s)'
+			curs.execute(sql, (file_number))
+			ble_transaction_list = curs.fetchall()
+			
+>>>>>>> master
 
 
 		finally:
 			conn.close()
 
+<<<<<<< HEAD
+=======
+		print(ble_ng_list)
+		print(ble_transaction_list)
+>>>>>>> master
 
 		return ble_ng_list, ble_transaction_list
 
