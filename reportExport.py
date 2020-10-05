@@ -44,10 +44,52 @@ def csvExport(bleFiles, zbeeFiles):
                 sql = '''SELECT 'file_number', 'transaction_number', 'command', 'phone_address', 'device_address',
                         'NG', 'request time', 'response time' UNION '''
                 sql += 'select * from transaction_ble where file_number = ' + str(file_idx[0]) + '\n'
-                sql += 'INTO OUTFILE \'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/' + file + '.csv\'\n'
+                sql += 'INTO OUTFILE \'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/' + file + '_log.csv\'\n'
                 sql += 'FIELDS TERMINATED BY \',\' LINES TERMINATED BY \'\n\''
                 curs.execute(sql)
-                packets = curs.fetchall()
+
+                # 해당 file_idx인 것 에러 패킷에서 select해오기
+                sql = '''SELECT 'file_number', 'transaction_number', 'location'  UNION '''
+                sql += 'select * from ng_ble where file_number = ' + str(file_idx[0]) + '\n'
+                sql += 'INTO OUTFILE \'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/' + file + '_NG_log.csv\'\n'
+                sql += 'FIELDS TERMINATED BY \',\' LINES TERMINATED BY \'\n\''
+                curs.execute(sql)
+
+
+        #2. 지그비 export
+        conn = pymysql.connect(host='localhost', user='root', password='wlalsl4fkd.',
+                       db='zigbee', charset='utf8')
+        curs = conn.cursor()
+
+        for file in zbeeFiles:
+            sql = 'select file_number from file_zigbee where file_name = \'' + file + '\''
+            curs.execute(sql)
+            file_idx = curs.fetchone()
+
+            if file_idx != None:
+                # 해당 file_idx인 것 트랜잭션 패킷에서 select해오기
+                sql = '''SELECT 'file number', 'transaction number', 'command', 'command value', 'NG' UNION '''
+                sql += 'select * from transaction_zigbee where file_number = ' + str(file_idx[0]) + '\n'
+                sql += 'INTO OUTFILE \'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/' + file + '_log.csv\'\n'
+                sql += 'FIELDS TERMINATED BY \',\' LINES TERMINATED BY \'\n\''
+                curs.execute(sql)
+
+                # 해당 file_idx인 것 에러 패킷에서 select해오기
+                sql = '''SELECT 'file number', 'transaction number', 'location'  UNION '''
+                sql += 'select * from ng_zigbee where file_number = ' + str(file_idx[0]) + '\n'
+                sql += 'INTO OUTFILE \'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/' + file + '_NG_log.csv\'\n'
+                sql += 'FIELDS TERMINATED BY \',\' LINES TERMINATED BY \'\n\''
+                curs.execute(sql)
+
+                # 해당 file_idx인 것 패킷에서 select해오기
+                sql = '''SELECT 'file number', 'transaction number', 'packet number', 'command', 'command value', 'dest',
+                        'src', 'time', 'location' UNION '''
+                sql += 'select * from transaction_zigbee where file_number = ' + str(file_idx[0]) + '\n'
+                sql += 'INTO OUTFILE \'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/' + file + '_packet_log.csv\'\n'
+                sql += 'FIELDS TERMINATED BY \',\' LINES TERMINATED BY \'\n\''
+                curs.execute(sql)
+
+                
 
     finally:
         conn.commit()
