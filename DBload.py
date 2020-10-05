@@ -36,7 +36,7 @@ class DB_LOAD:
 		
 		return zbee_file_list
 
-	def DB_to_ble(self, file):
+	def ble_lists_from_DB(self, file):
 		conn = pymysql.connect(host='localhost', user='root', password='wlalsl4fkd.',
                        db='ble', charset='utf8')
 
@@ -57,6 +57,6 @@ class DB_LOAD:
     	finally:
     		conn.close()
 
-    	print(ng_list, ble_list)
+    	print(ble_ng_list, ble_transaction_list)
 
-    	return ng_list, ble_list
+    	return ble_ng_list, ble_transaction_list
