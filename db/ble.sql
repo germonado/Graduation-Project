@@ -13,8 +13,8 @@ ALTER TABLE File_ble
 CREATE TABLE NG_ble
 ( 
 	file_number          integer  NOT NULL ,
-	location             integer  NULL ,
-	transaction_number   integer  NOT NULL 
+	transaction_number   integer  NOT NULL ,
+	location             integer  NULL 
 );
 
 ALTER TABLE NG_ble
@@ -23,11 +23,11 @@ ALTER TABLE NG_ble
 CREATE TABLE Transaction_ble
 ( 
 	file_number          integer  NOT NULL ,
-	NG                   varchar(20)  NULL ,
 	transaction_number   integer  NOT NULL ,
 	command              varchar(20)  NULL ,
 	phone_address        varchar(20)  NULL ,
 	device_address       varchar(20)  NULL ,
+	NG                   varchar(20)  NULL ,
 	request_time         datetime  NULL ,
 	response_time        datetime  NULL 
 );

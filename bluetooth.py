@@ -152,14 +152,14 @@ class BluetoothCheck:
 				ng_item = [transaction_number, 2]
 				self.ng_list.append(ng_item)
 
-		print("============write_req====================")
-		for i in self.write_req:
-			print(i['frame']['frame.number'])
-		print("============write_req====================")
-		for i in self.write_res:
-			print(i['frame']['frame.number'])
-		for i in self.report_list:
-			print(i)
+		#print("============write_req====================")
+		#for i in self.write_req:
+		#	print(i['frame']['frame.number'])
+		#print("============write_req====================")
+		#for i in self.write_res:
+		#	print(i['frame']['frame.number'])
+		#for i in self.report_list:
+		#	print(i)
 
 		self.cmd_statistics = [self.onoff_statistics, self.color_temp_statistics, self.dim_level_statistics, ng_count, success_count , len(self.write_req)+send_miss]
 		return self.report_list, self.cmd_statistics, self.ng_list
