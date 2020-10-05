@@ -91,6 +91,7 @@ class BluetoothCheck:
 		ng_count = 0
 		success_count = 0
 		send_miss = 0
+		error_code = 0
 		resend = len(self.write_res)
 		reqend = len(self.write_req)
 		for reqind in range(reqend):
@@ -109,7 +110,7 @@ class BluetoothCheck:
 					receive_timeinfo = datetime.datetime.strptime(self.write_res[restmp]['frame']['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
 					src = self.write_req[reqind]['btle']['btle.master_bd_addr']
 					dst = self.write_req[reqind]['btle']['btle.slave_bd_addr']
-					temp_item_send = [transaction_number, send_cmd, src, dst, success_check, send_timeinfo, receive_timeinfo]
+					temp_item_send = [transaction_number, send_cmd, src, dst, success_check, send_timeinfo, receive_timeinfo, "0"]
 					self.classify_command(send_cmd, success_check)
 					self.report_list.append(temp_item_send)
 					resind = restmp+1
@@ -120,46 +121,39 @@ class BluetoothCheck:
 					success_check = "NG"
 					ng_count = ng_count + 1
 					send_miss = send_miss + 1
-					send_framenum = self.write_res[resind]['frame']['frame.number']
+					error_code = 1 
 					send_timeinfo = datetime.datetime.strptime(self.write_res[resind]['frame']['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
-					send_cmd = UUIDDICT[self.write_res[resind]['btatt']['btatt.handle_tree']['btatt.uuid128']]
-					src = self.write_res[resind]['btle']['btle.master_bd_addr']
-					dst = self.write_res[resind]['btle']['btle.slave_bd_addr']
-					temp_item = [transaction_number, send_cmd, src, dst, success_check, send_timeinfo, "1(No Command Send)"]
+					send_cmd = UUIDDICT[self.write_res[restmp]['btatt']['btatt.handle_tree']['btatt.uuid128']]
+					src = self.write_res[restmp]['btle']['btle.master_bd_addr']
+					dst = self.write_res[restmp]['btle']['btle.slave_bd_addr']
+					temp_item = [transaction_number, send_cmd, src, dst, success_check, "", send_timeinfo, error_code]
 					transaction_number += 1
 					self.classify_command(send_cmd, success_check)
 					self.report_list.append(temp_item)
 					# For ng list logging with transaction number and error explanation
 					ng_item = [transaction_number, 1]
 					self.ng_list.append(ng_item)
-					print(self.write_res[restmp]['btatt']['btatt.request_in_frame'])
 					break
 
-			
+		
 			# 만약 transaction에 대한 response가 돌아오지 않았을때
 			if flag == 0:
 				success_check = "NG"
 				ng_count = ng_count + 1
-				send_framenum = self.write_req[reqind]['frame']['frame.number']
+				error_code = 2
 				send_timeinfo = datetime.datetime.strptime(self.write_req[reqind]['frame']['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
 				send_cmd = UUIDDICT[self.write_req[reqind]['btatt']['btatt.handle_tree']['btatt.uuid128']]
 				src = self.write_req[reqind]['btle']['btle.master_bd_addr']
 				dst = self.write_req[reqind]['btle']['btle.slave_bd_addr']
-				temp_item = [transaction_number, send_cmd, src, dst, success_check, send_timeinfo, "2(No Command Response)"]
+				temp_item = [transaction_number, send_cmd, src, dst, success_check, send_timeinfo, "",error_code]
 				self.classify_command(send_cmd, success_check)
 				self.report_list.append(temp_item)
 				# For ng list logging with transaction number and error explanation
 				ng_item = [transaction_number, 2]
 				self.ng_list.append(ng_item)
 
-		print("============write_req====================")
-		for i in self.write_req:
-			print(i['frame']['frame.number'])
-		print("============write_req====================")
-		for i in self.write_res:
-			print(i['frame']['frame.number'])
-		for i in self.report_list:
-			print(i)
+
+
 
 		self.cmd_statistics = [self.onoff_statistics, self.color_temp_statistics, self.dim_level_statistics, ng_count, success_count , len(self.write_req)+send_miss]
 		return self.report_list, self.cmd_statistics, self.ng_list
