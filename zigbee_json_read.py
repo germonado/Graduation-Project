@@ -876,5 +876,5 @@ def debugging():
 
 
 
-#exportLogList('20200930.json', '20200930.json')
-#debugging()
+exportLogList('20200930.json', '20200930.json')
+debugging()

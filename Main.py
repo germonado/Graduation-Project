@@ -20,7 +20,9 @@ from flask import Blueprint, request, render_template, flash, redirect, url_for
 from flask import current_app as current_app
  
 from app.module.DB import dbModule
-import ble_json_read
+#import ble_json_read
+import zigbee_json_read as zb
+
 #from ble_json_read import BluetoothCheck as bleCheck
 
 HOST_ADDRESS = '127.0.0.1'
@@ -64,16 +66,21 @@ def forms():
 def bluetooth_report():
     ble = ble_json_read.BluetoothCheck()
     #ble.write_command_extract(ble.get_file())
-    ble.get_file()
-    ble_list, cmd_statistics = ble.write_command_succeed_check()
-    return render_template('bluetooth_report.html', fileList=ble_list)
+    file_list = ble.get_file()
+    print(file_list)
+    for f in file_list:
+        ble.write_command_extract(f)
+        ble_list, cmd_statistics, t = ble.write_command_succeed_check()
+        print(ble_list, cmd_statistics)
+        break
+    return render_template('bluetooth_report.html', fileList=ble_list, staList=cmd_statistics)
 
 @app.route("/zigbee_report")
-def bluetooth_report():
+def zigbee_report():
     ble = ble_json_read.BluetoothCheck()
     #ble.write_command_extract(ble.get_file())
-    ble.get_file()
-    ble_list, cmd_statistics = ble.write_command_succeed_check()
+    #ble.get_file(ble, 'onoffctonoff_error4.json')
+    #ble_list, cmd_statistics = ble.write_command_succeed_check()
     return render_template('zigbee_report.html', fileList=ble_list, staList=cmd_statistics)
 
 
