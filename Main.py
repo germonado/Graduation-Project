@@ -20,14 +20,9 @@ from flask import Blueprint, request, render_template, flash, redirect, url_for
 from flask import current_app as current_app
  
 from app.module.DB import dbModule
-#<<<<<<< HEAD
-#import ble_json_read
-import zigbee_json_read as zb
-
-#=======
+import zigbee as zb
 import bluetooth as ble_json_read
-#>>>>>>> 8eea50c8522f1af2f66e6b8ccb0e55e6546e399b
-#from ble_json_read import BluetoothCheck as bleCheck
+
 
 HOST_ADDRESS = '127.0.0.1'
 
@@ -58,14 +53,6 @@ def log_lists():
 
     return render_template('log_list.html', fileList=log_file_list)
 
-@app.route("/icons")
-def icons():
-     return render_template('icons.html')
-
-@app.route("/forms")
-def forms():
-    return render_template('forms.html')
-
 @app.route("/bluetooth_report")
 def bluetooth_report():
     ble = ble_json_read.BluetoothCheck()
@@ -80,11 +67,8 @@ def bluetooth_report():
     return render_template('bluetooth_report.html', fileList=ble_list, staList=cmd_statistics)
 
 @app.route("/zigbee_report")
-#<<<<<<< HEAD
-#def zigbee_report():
-#=======
+
 def zibgee_report():
-#>>>>>>> 8eea50c8522f1af2f66e6b8ccb0e55e6546e399b
     ble = ble_json_read.BluetoothCheck()
     #ble.write_command_extract(ble.get_file())
     #ble.get_file(ble, 'onoffctonoff_error4.json')
