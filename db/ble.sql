@@ -4,7 +4,7 @@ use ble;
 CREATE TABLE File_ble
 ( 
 	file_number          integer  NOT NULL ,
-	file_name            char(18)  NULL 
+	file_name            VARCHAR(30)  NULL 
 );
 
 ALTER TABLE File_ble
@@ -29,7 +29,8 @@ CREATE TABLE Transaction_ble
 	phone_address        varchar(20)  NULL ,
 	device_address       varchar(20)  NULL ,
 	request_time         datetime  NULL ,
-	response_time        datetime  NULL 
+	response_time        datetime  NULL ,
+	error_code				INTEGER   NULL 
 );
 
 ALTER TABLE Transaction_ble

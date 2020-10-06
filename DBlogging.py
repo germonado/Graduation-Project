@@ -36,7 +36,7 @@ def bleToDB(packetFiles):
             curs.execute(sql, (file_idx, packet))
 
             for t in transactions:
-                sql = 'insert ignore into transaction_ble values (%s, %s, %s, %s, %s, %s, %s, %s)'
+                sql = 'insert ignore into transaction_ble values (%s, %s, %s, %s, %s, %s, %s, %s, %s)'
                 t.insert(0, file_idx)
                 t = tuple(t)
                 curs.execute(sql, t)
@@ -152,5 +152,5 @@ def zbeeToDB(packetFiles, hubFiles):
 
 # 모듈 사용 --------------------------------------------------------------
 
-#bleToDB(get_file(b_file))
+bleToDB(get_file(b_file))
 #zbeeToDB(get_file(p_file), get_file(h_file))
