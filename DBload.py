@@ -12,12 +12,6 @@ ZBEE_PATH = './exported_json/zigbee'
 class DB_LOAD:
 	
 
-	def __init__(self):
-
-		self.ble_filelist = []
-		self.zbee_filelist = []
-
-
 	def ble_file_load(self):
 
 		dirpath = BLE_PATH
@@ -48,8 +42,6 @@ class DB_LOAD:
 			sql = 'select file_number from file_ble where file_name=(%s)'
 			file_number = curs.execute(sql, (file))
 
-<<<<<<< HEAD
-=======
 			sql = 'select * from ng_ble where file_number=(%s)'
 			curs.execute(sql, (file_number))
 			ble_ng_list = curs.fetchall()
@@ -57,21 +49,76 @@ class DB_LOAD:
 			sql = 'select * from transaction_ble where file_number=(%s)'
 			curs.execute(sql, (file_number))
 			ble_transaction_list = curs.fetchall()
+
+			sql = 'select count(*) from transaction_ble where command=(%s)'
+			curs.execute(sql, ("OnOff"))
+			onoff_cmd = curs.fetchall()
+
+			sql = 'select count(*) from transaction_ble where command=(%s)'
+			curs.execute(sql, ("Dim Level"))
+			dim_cmd = curs.fetchall()
+
+			sql = 'select count(*) from transaction_ble where command=(%s)'
+			curs.execute(sql, ("Color Temp"))
+			ctmp_cmd = curs.fetchall()
+
+			sql = 'select count(*) from transaction_ble where command=(%s) and ng=(%s)'
+			curs.execute(sql, ("OnOff"), ("Success"))
+			suc_onoff = curs.fetchall()
+
+			sql = 'select count(*) from transaction_ble where command=(%s) and ng=(%s)'
+			curs.execute(sql, ("Dim Level"), ("Success"))
+			suc_dim = curs.fetchall()
+
+			sql = 'select count(*) from transaction_ble where command=(%s) and ng=(%s)'
+			curs.execute(sql, ("Color Temp") ("Success"))
+			suc_ctmp = curs.fetchall()
+
 			
->>>>>>> master
-
-
 		finally:
 			conn.close()
 
-<<<<<<< HEAD
-=======
-		print(ble_ng_list)
-		print(ble_transaction_list)
->>>>>>> master
+		ng_onoff = onoff_cmd - suc_onoff
+		ng_ctmp = ctmp_cmd - suc_ctmp
+		ng_dim = dim_cmd - suc_dim
+		ng_total = ng_onoff+ng_ctmp+ng_dim
+		suc_total = suc_ctmp+suc_dim+suc_onoff
 
-		return ble_ng_list, ble_transaction_list
+		ble_statistics = [[onoff_cmd,suc_onoff,ng_onoff], [ctmp_cmd,suc_ctmp,ng_ctmp], [dim_cmd,suc_dim,ng_dim],
+						ng_total, suc_total, len(ble_transaction_list)
+						]
+		print(ble_transaction_list)
+		return ble_transaction_list, ble_statistics
+
+
+	def zbee_lists_from_DB(self, file):
+		conn = pymysql.connect(host='localhost', user='root', password='wlalsl4fkd.',
+	               db='ble', charset='utf8')
+
+		curs = conn.cursor()
+		file_idx = 0
+
+		try:
+
+			sql = 'select file_number from file_zigbee where file_name=(%s)'
+			file_number = curs.execute(sql, (file))
+
+			sql = 'select * from pakcet_zigbee where file_number=(%s)'
+			curs.execute(sql, (file_number))
+			zbee_ng_list = curs.fetchall()
+
+			sql = 'select * from transation_zigbee where file_number=(%s)'
+			curs.execute(sql, (file_number))
+			zbee_transaction_list = curs.fetchall()
+			
+		finally:
+			conn.close()
+
+		print(zbee_ng_list, zbee_transaction_list)
+		return zbee_ng_list, zbee_transaction_list
 
 db = DB_LOAD()
 ble_file_list = db.ble_file_load()
 db.ble_lists_from_DB(ble_file_list[0])
+zbee_file_list = db.zbee_file_load()
+db.zbee_lists_from_DB(zbee_file_list[0])
