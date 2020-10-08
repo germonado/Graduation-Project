@@ -20,9 +20,8 @@ from flask import Blueprint, request, render_template, flash, redirect, url_for
 from flask import current_app as current_app
  
 from app.module.DB import dbModule
-import zigbee as zb
-import bluetooth as ble_json_read
 
+#import DBload as DB
 
 HOST_ADDRESS = '127.0.0.1'
 
@@ -45,35 +44,30 @@ test= Blueprint('test', __name__, url_prefix='/test')
 def home():
     return render_template('index.html')
 
-@app.route("/log_lists")
-def log_lists():
-    path = "./log_data/"
-
-    log_file_list = os.listdir(path)
-
-    return render_template('log_list.html', fileList=log_file_list)
 
 @app.route("/bluetooth_report")
 def bluetooth_report():
-    ble = ble_json_read.BluetoothCheck()
+   # ble = ble_json_read.BluetoothCheck()
     #ble.write_command_extract(ble.get_file())
-    file_list = ble.get_file()
-    print(file_list)
-    for f in file_list:
+    #ble_file_list = DB.ble_file_load()
+    ble_file_list = ble.get_file()
+    #print(file_list)
+    
+    for f in ble_file_list:
         ble.write_command_extract(f)
-        ble_list, cmd_statistics, t = ble.write_command_succeed_check()
-        print(ble_list, cmd_statistics)
+        ble_list, ble_statistics, t = ble.write_command_succeed_check()
         break
-    return render_template('bluetooth_report.html', fileList=ble_list, staList=cmd_statistics)
+    
+    #ble_list, ble_statistics = DB.ble_lists_from_DB(ble_file_list[0])
+    return render_template('bluetooth_report.html', bleList=ble_list, staList=ble_statistics, fileList=ble_file_list)
 
 @app.route("/zigbee_report")
 
 def zibgee_report():
-    ble = ble_json_read.BluetoothCheck()
-    #ble.write_command_extract(ble.get_file())
-    #ble.get_file(ble, 'onoffctonoff_error4.json')
-    #ble_list, cmd_statistics = ble.write_command_succeed_check()
-    return render_template('zigbee_report.html', fileList=ble_list, staList=cmd_statistics)
+    zbee_file_list = DB.zbee_file_load()
+
+    zbee_ng_list, zbee_list = DB.zbee_lists_from_DB(zbee_file_list[0])
+    return render_template('zigbee_report.html', fileList=zbee_list, staList=cmd_statistics, ngList=zbee_ng_list)
 
 
 @app.route("/tables")
