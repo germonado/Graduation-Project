@@ -20,11 +20,19 @@ from flask import Blueprint, request, render_template, flash, redirect, url_for
 from flask import current_app as current_app
  
 from app.module.DB import dbModule
+<<<<<<< .merge_file_a13520
 <<<<<<< .merge_file_a15568
 import zigbee
 import bluetooth
 =======
 >>>>>>> .merge_file_a15396
+=======
+<<<<<<< .merge_file_a64540
+import zigbee
+import bluetooth
+=======
+>>>>>>> .merge_file_a73960
+>>>>>>> .merge_file_a00848
 
 #import DBload as DB
 
@@ -49,7 +57,11 @@ test= Blueprint('test', __name__, url_prefix='/test')
 def home():
     return render_template('index.html')
 
+<<<<<<< .merge_file_a13520
 <<<<<<< .merge_file_a15568
+=======
+<<<<<<< .merge_file_a64540
+>>>>>>> .merge_file_a00848
 @app.route("/log_lists")
 def log_lists():
     path = "./log_data/"
@@ -80,7 +92,11 @@ def bluetooth_report():
 @app.route("/bluetooth_report")
 def bluetooth_report():
    # ble = ble_json_read.BluetoothCheck()
+<<<<<<< .merge_file_a13520
 >>>>>>> .merge_file_a15396
+=======
+>>>>>>> .merge_file_a73960
+>>>>>>> .merge_file_a00848
     #ble.write_command_extract(ble.get_file())
     #ble_file_list = DB.ble_file_load()
     ble_file_list = ble.get_file()
@@ -95,7 +111,11 @@ def bluetooth_report():
     return render_template('bluetooth_report.html', bleList=ble_list, staList=ble_statistics, fileList=ble_file_list)
 
 
+<<<<<<< .merge_file_a13520
 <<<<<<< .merge_file_a15568
+=======
+<<<<<<< .merge_file_a64540
+>>>>>>> .merge_file_a00848
 @app.route("/zigbee_report")
 def zigbee_report():
     zb = zigbee.ZigbeeCheck()
@@ -111,7 +131,11 @@ def zibgee_report():
 
     zbee_ng_list, zbee_list = DB.zbee_lists_from_DB(zbee_file_list[0])
     return render_template('zigbee_report.html', fileList=zbee_list, staList=cmd_statistics, ngList=zbee_ng_list)
+<<<<<<< .merge_file_a13520
 >>>>>>> .merge_file_a15396
+=======
+>>>>>>> .merge_file_a73960
+>>>>>>> .merge_file_a00848
 
 
 @app.route("/tables")
