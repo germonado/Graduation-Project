@@ -1,0 +1,7 @@
+file_number,transaction_number,command,phone_address,device_address,NG,request time,response time,error code
+0,1,OnOff,55:bc:5d:8f:fc:6c,88:57:1d:0e:54:15,Success,2020-07-14 18:22:15,2020-07-14 18:22:15,0
+0,2,OnOff,55:bc:5d:8f:fc:6c,88:57:1d:0e:54:15,NG,2020-07-14 18:22:18,0000-00-00 00:00:00,2
+0,3,Color Temp,55:bc:5d:8f:fc:6c,88:57:1d:0e:54:15,Success,2020-07-14 18:22:25,2020-07-14 18:22:25,0
+0,4,OnOff,55:bc:5d:8f:fc:6c,88:57:1d:0e:54:15,NG,2020-07-14 18:22:25,0000-00-00 00:00:00,2
+0,5,OnOff,55:bc:5d:8f:fc:6c,88:57:1d:0e:54:15,NG,0000-00-00 00:00:00,2020-07-14 18:22:30,1
+0,6,OnOff,55:bc:5d:8f:fc:6c,88:57:1d:0e:54:15,NG,2020-07-14 18:22:35,0000-00-00 00:00:00,2

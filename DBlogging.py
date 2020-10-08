@@ -4,10 +4,10 @@ import pymysql
 import zigbee
 import bluetooth as ble
 
+
 p_file = './exported_json/zigbee'
 h_file = './exported_json/hub'
 b_file = './exported_json/ble'
-
 
 def get_file(dirpath):
     fileList = [s for s in os.listdir(dirpath) 
@@ -148,9 +148,5 @@ def zbeeToDB(packetFiles, hubFiles):
         conn.close()
 
 
-    
-
-# 모듈 사용 --------------------------------------------------------------
-
 bleToDB(get_file(b_file))
-#zbeeToDB(get_file(p_file), get_file(h_file))
+zbeeToDB(get_file(p_file), get_file(h_file))

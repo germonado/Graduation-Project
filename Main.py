@@ -23,6 +23,8 @@ from app.module.DB import dbModule
 import zigbee
 import bluetooth
 
+import DBlogging
+import reportExport
 import DBload as DB
 
 HOST_ADDRESS = '127.0.0.1'
@@ -71,35 +73,20 @@ def zbee_log():
 
 @app.route("/bluetooth_report")
 def bluetooth_report():
-   # ble = ble_json_read.BluetoothCheck()
-    #ble.write_command_extract(ble.get_file())
-    #ble_file_list = DB.ble_file_load()
-    ble_file_list = ble.get_file()
-    #print(file_list)
-    
-    for f in ble_file_list:
-        ble.write_command_extract(f)
-        ble_list, ble_statistics, t = ble.write_command_succeed_check()
-        break
-    
-    #ble_list, ble_statistics = DB.ble_lists_from_DB(ble_file_list[0])
+    db = DB.DB_LOAD()
+    ble_file_list = db.ble_file_load()
+       
+    ble_list, ble_statistics = db.ble_lists_from_DB(ble_file_list[0])
     return render_template('bluetooth_report.html', bleList=ble_list, staList=ble_statistics, fileList=ble_file_list)
 
 
 @app.route("/zigbee_report")
 def zigbee_report():
-    zb = zigbee.ZigbeeCheck()
-    hub, trans, packets, ng = zb.exportLogList('20200930.json', '20200930.json')
-    zb.debugging()
-    #ble.write_command_extract(ble.get_file())
-    #ble.get_file(ble, 'onoffctonoff_error4.json')
-    #ble_list, cmd_statistics = ble.write_command_succeed_check()
+    db = DB.DB_LOAD()
+    zbee_file_list = db.zbee_file_load()
 
-def zibgee_report():
-    zbee_file_list = DB.zbee_file_load()
-
-    zbee_ng_list, zbee_list = DB.zbee_lists_from_DB(zbee_file_list[0])
-    return render_template('zigbee_report.html', fileList=zbee_list, staList=cmd_statistics, ngList=zbee_ng_list)
+    zbee_ng_list, zbee_list = db.zbee_lists_from_DB(zbee_file_list[0])
+    return render_template('zigbee_report.html', fileList=zbee_file_list, staList=zbee_list, ngList=zbee_ng_list)
 
 
 @app.route("/tables")
@@ -188,9 +175,8 @@ def update():
 if __name__ == "__main__":
     HOST_ADDRESS = socket.gethostbyname(socket.getfqdn())
 
-    # 앞쪽에 만들어 둔 모듈 전부 불러쓰기 (DB에 로깅하는 모듈들)
-    
     print('Start Main')
+    
     try:
         app.run(host=HOST_ADDRESS, port=HOST_PORT, debug=True)
 

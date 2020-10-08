@@ -1,16 +1,15 @@
-# ble_json_read와 zigbee_json_read에서 만들어진 list들을 db에 로깅하는 모듈
 import os,sys
 import pymysql
-import zigbee
 import shutil
-import bluetooth as ble
 
 p_file = './exported_json/zigbee'
 h_file = './exported_json/hub'
 b_file = './exported_json/ble'
+
 db_dir = 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/'
 dest_ble = './log_data/ble/'
 dest_zbee = './log_data/zigbee/'
+
 
 def get_file(dirpath):
     fileList = [s for s in os.listdir(dirpath) 
@@ -33,6 +32,7 @@ def csvExport(bleFiles, zbeeFiles):
                        db='ble', charset='utf8')
         curs = conn.cursor()
         
+            
         for file in bleFiles:
             sql = 'select file_number from file_ble where file_name = (%s)'
             curs.execute(sql, (file))
@@ -41,7 +41,7 @@ def csvExport(bleFiles, zbeeFiles):
             if file_idx != None:
                 # 해당 file_idx인 것 트랜잭션 패킷에서 select해오기
                 sql = '''SELECT 'file_number', 'transaction_number', 'command', 'phone_address', 'device_address',
-                        'NG', 'request time', 'response time' UNION '''
+                        'NG', 'request time', 'response time', 'error code' UNION '''
                 sql += 'select * from transaction_ble where file_number = (%s)\n'
                 sql += '''INTO OUTFILE %s\n'''
                 sql += '''FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' '''
@@ -61,10 +61,12 @@ def csvExport(bleFiles, zbeeFiles):
                 bleCSV.append(newName)
 
 
+
         #2. 지그비 export
         conn = pymysql.connect(host='localhost', user='root', password='wlalsl4fkd.',
                        db='zigbee', charset='utf8')
         curs = conn.cursor()
+
 
         for file in zbeeFiles:
             sql = 'select file_number from file_zigbee where file_name = (%s)'
@@ -74,6 +76,7 @@ def csvExport(bleFiles, zbeeFiles):
             if file_idx != None:
                 
                 # 해당 file_idx인 것 트랜잭션 패킷에서 select해오기
+
                 sql = '''SELECT 'file number', 'transaction number', 'command', 'command value', 'NG' UNION '''
                 sql += 'select * from transaction_zigbee where file_number = (%s)\n'
                 sql += '''INTO OUTFILE %s\n'''
@@ -105,6 +108,7 @@ def csvExport(bleFiles, zbeeFiles):
                 zbeeCSV.append(newName)
 
     finally:
+        
         conn.commit()
         conn.close()
 
@@ -112,7 +116,6 @@ def csvExport(bleFiles, zbeeFiles):
     
 
 def fileMove(bleList, zbeeList):
-    
     for b in bleList:
         src = db_dir
         des = dest_ble
@@ -122,13 +125,12 @@ def fileMove(bleList, zbeeList):
         src = db_dir
         des = dest_zbee
         shutil.move(src + z, des + z)
-
+        
 
 # 모듈 사용 --------------------------------------------------
-'''
+
 bleFiles = get_file(b_file)
 zbeeFiles = get_file(p_file)
 
 bleFiles, zbeeFiles = csvExport(bleFiles, zbeeFiles)
 fileMove(bleFiles, zbeeFiles)
-'''

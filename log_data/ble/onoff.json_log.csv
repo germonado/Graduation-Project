@@ -1,7 +1,7 @@
-file_number,transaction_number,command,phone_address,device_address,NG,request time,response time
-2,1,OnOff,75:e3:df:e6:d4:f9,88:57:1d:0e:54:15,Success,2020-07-14 17:58:12,2020-07-14 17:58:12
-2,2,OnOff,75:e3:df:e6:d4:f9,88:57:1d:0e:54:15,Success,2020-07-14 17:58:20,2020-07-14 17:58:20
-2,3,OnOff,75:e3:df:e6:d4:f9,88:57:1d:0e:54:15,Success,2020-07-14 17:58:27,2020-07-14 17:58:27
-2,4,OnOff,75:e3:df:e6:d4:f9,88:57:1d:0e:54:15,Success,2020-07-14 17:58:35,2020-07-14 17:58:35
-2,5,OnOff,75:e3:df:e6:d4:f9,88:57:1d:0e:54:15,Success,2020-07-14 17:58:44,2020-07-14 17:58:44
-2,6,OnOff,75:e3:df:e6:d4:f9,88:57:1d:0e:54:15,Success,2020-07-14 17:58:50,2020-07-14 17:58:50
+file_number,transaction_number,command,phone_address,device_address,NG,request time,response time,error code
+2,1,OnOff,75:e3:df:e6:d4:f9,88:57:1d:0e:54:15,Success,2020-07-14 17:58:12,2020-07-14 17:58:12,0
+2,2,OnOff,75:e3:df:e6:d4:f9,88:57:1d:0e:54:15,Success,2020-07-14 17:58:20,2020-07-14 17:58:20,0
+2,3,OnOff,75:e3:df:e6:d4:f9,88:57:1d:0e:54:15,Success,2020-07-14 17:58:27,2020-07-14 17:58:27,0
+2,4,OnOff,75:e3:df:e6:d4:f9,88:57:1d:0e:54:15,Success,2020-07-14 17:58:35,2020-07-14 17:58:35,0
+2,5,OnOff,75:e3:df:e6:d4:f9,88:57:1d:0e:54:15,Success,2020-07-14 17:58:44,2020-07-14 17:58:44,0
+2,6,OnOff,75:e3:df:e6:d4:f9,88:57:1d:0e:54:15,Success,2020-07-14 17:58:50,2020-07-14 17:58:50,0

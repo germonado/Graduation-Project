@@ -166,7 +166,7 @@
                    </tr>
                    </thead>
                    <tbody>
-                     {% for transNum, cmdType, src, dst, success, sndtime, rcvtime, errcode in bleList %}
+                     {% for fileNum, transNum, cmdType, src, dst, success, sndtime, rcvtime, errcode in bleList %}
                       {% if success == "Success" %}
                         <tr class="should_hide" style="color:#07c733; display: none;">
                           <td>{{transNum}}</td>
