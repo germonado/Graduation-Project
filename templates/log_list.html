@@ -30,26 +30,53 @@
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Log File List</h5>
+			  <ol class="breadcrumb">
+			    <li class="breadcrumb-item">
+				  <a href="/log_lists">Home</a>
+				</li>
+				{% if protocol == "ble" %}
+				<li class="breadcrumb-item">Bluetooth
+				</li>
+				{% endif %}
+				{% if protocol == "zbee" %}
+				<li class="breadcrumb-item">Zigbee
+				</li>
+				{% endif %}
+			  </ol>
 			  <div class="table-responsive">
               <table class="table table-hover">
+			    {% if protocol == "" %}
+				<tbody>
+				  <tr>
+					<td><i class="zmdi zmdi-folder-outline"></i> &nbsp;&nbsp;<a href="/log_lists/ble">Bluetooth</a></td>
+				  </tr>
+				  <tr>
+					<td><i class="zmdi zmdi-folder-outline"></i> &nbsp;&nbsp;<a href="/log_lists/zbee">Zigbee</a></td>
+				  </tr>
+				</tbody>
+				{% endif %}
+			    {% if protocol != "" %}
                 <thead>
                   <tr>
                     <th scope="col">번호</th>
                     <th scope="col">로그파일</th>
-                    <th scope="col">생성시간</th>
-                    <th scope="col">로깅여부</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {% for log_file in fileList %}
+                  {% for log_file in bleList %}
                     <tr>
                       <th scope="row"><script>document.write(num+=1);</script></th>
-                      <td><a href="./log_file_download?file_name={{log_file}}">{{log_file}}</a></td>
-                      <td>Otto</td>
-                      <td>@mdo</td>
+                      <td><i class="zmdi zmdi-file-text"></i> &nbsp;<a href="../log_file_download?protocol=ble&file_name={{log_file}}">{{log_file}}</a></td>
+                    </tr>
+                  {% endfor %}
+                  {% for log_file in zbeeList %}
+                    <tr>
+                      <th scope="row"><script>document.write(num+=1);</script></th>
+                      <td><i class="zmdi zmdi-file-text"></i> &nbsp;<a href="../log_file_download?protocol=zigbee&file_name={{log_file}}">{{log_file}}</a></td>
                     </tr>
                   {% endfor %}
                 </tbody>
+				{% endif %}
               </table>
             </div>
             </div>
