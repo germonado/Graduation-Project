@@ -20,9 +20,13 @@ from flask import Blueprint, request, render_template, flash, redirect, url_for
 from flask import current_app as current_app
  
 from app.module.DB import dbModule
-import zigbee as zb
-import bluetooth as ble_json_read
+<<<<<<< .merge_file_a15568
+import zigbee
+import bluetooth
+=======
+>>>>>>> .merge_file_a15396
 
+#import DBload as DB
 
 HOST_ADDRESS = '127.0.0.1'
 
@@ -45,35 +49,69 @@ test= Blueprint('test', __name__, url_prefix='/test')
 def home():
     return render_template('index.html')
 
+<<<<<<< .merge_file_a15568
 @app.route("/log_lists")
 def log_lists():
     path = "./log_data/"
 
-    log_file_list = os.listdir(path)
+    return render_template('log_list.html', protocol='')
 
-    return render_template('log_list.html', fileList=log_file_list)
+
+@app.route("/log_lists/ble")
+def ble_log():
+    path = "./log_data/ble/"
+    log_file = os.listdir(path)
+    
+    return render_template('log_list.html', protocol='ble', bleList=log_file)
+    
+
+@app.route("/log_lists/zbee")
+def zbee_log():
+    path = "./log_data/zigbee"
+    log_file = os.listdir(path)
+
+    return render_template('log_list.html', protocol='zbee', zbeeList=log_file)
 
 @app.route("/bluetooth_report")
 def bluetooth_report():
-    ble = ble_json_read.BluetoothCheck()
+    ble = bluetooth.BluetoothCheck()
+=======
+
+@app.route("/bluetooth_report")
+def bluetooth_report():
+   # ble = ble_json_read.BluetoothCheck()
+>>>>>>> .merge_file_a15396
     #ble.write_command_extract(ble.get_file())
-    file_list = ble.get_file()
-    print(file_list)
-    for f in file_list:
+    #ble_file_list = DB.ble_file_load()
+    ble_file_list = ble.get_file()
+    #print(file_list)
+    
+    for f in ble_file_list:
         ble.write_command_extract(f)
-        ble_list, cmd_statistics, t = ble.write_command_succeed_check()
-        print(ble_list, cmd_statistics)
+        ble_list, ble_statistics, t = ble.write_command_succeed_check()
         break
-    return render_template('bluetooth_report.html', fileList=ble_list, staList=cmd_statistics)
+    
+    #ble_list, ble_statistics = DB.ble_lists_from_DB(ble_file_list[0])
+    return render_template('bluetooth_report.html', bleList=ble_list, staList=ble_statistics, fileList=ble_file_list)
 
+
+<<<<<<< .merge_file_a15568
 @app.route("/zigbee_report")
-
-def zibgee_report():
-    ble = ble_json_read.BluetoothCheck()
+def zigbee_report():
+    zb = zigbee.ZigbeeCheck()
+    hub, trans, packets, ng = zb.exportLogList('20200930.json', '20200930.json')
+    zb.debugging()
     #ble.write_command_extract(ble.get_file())
     #ble.get_file(ble, 'onoffctonoff_error4.json')
     #ble_list, cmd_statistics = ble.write_command_succeed_check()
-    return render_template('zigbee_report.html', fileList=ble_list, staList=cmd_statistics)
+    return render_template('zigbee_report.html', fileList=trans, staList=packets)
+=======
+def zibgee_report():
+    zbee_file_list = DB.zbee_file_load()
+
+    zbee_ng_list, zbee_list = DB.zbee_lists_from_DB(zbee_file_list[0])
+    return render_template('zigbee_report.html', fileList=zbee_list, staList=cmd_statistics, ngList=zbee_ng_list)
+>>>>>>> .merge_file_a15396
 
 
 @app.route("/tables")
@@ -99,8 +137,9 @@ def registration():
 @app.route('/log_file_download')
 def log_file_download():
     path = "./log_data/"
+    protocol = flask_request.args.get('protocol', None)
     file_name = flask_request.args.get('file_name', None)
-    return send_file(path + file_name, attachment_filename=file_name, as_attachment=True)
+    return send_file(path + '/' + protocol + '/' + file_name, attachment_filename=file_name, as_attachment=True)
 
 # INSERT 함수 예제
 @test.route('/insert', methods=['GET'])
@@ -159,6 +198,10 @@ def update():
 # default host address 127.0.0.1
 # host port numer 8085
 if __name__ == "__main__":
+    HOST_ADDRESS = socket.gethostbyname(socket.getfqdn())
+
+    # 앞쪽에 만들어 둔 모듈 전부 불러쓰기 (DB에 로깅하는 모듈들)
+    
     print('Start Main')
     try:
         app.run(host=HOST_ADDRESS, port=HOST_PORT, debug=True)
