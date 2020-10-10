@@ -20,21 +20,13 @@
     <div class="container-fluid">
 
   <div class = "row">   
-     <div class="col-12 col-lg-4 col-xl-4">
+     <div class="col-12 col-lg-6 col-xl-6">
         <div class="card">
            <div class="card-header" style="font-size: 20px">Total Command {{staList[5]}}
              <div class="card-action">
              <div class="dropdown">
              <a href="javascript:void();" class="dropdown-toggle dropdown-toggle-nocaret" data-toggle="dropdown">
-              <!--<i class="icon-options"></i>-->
              </a>
-              <div class="dropdown-menu dropdown-menu-right">
-              <a class="dropdown-item" href="javascript:void();">Action</a>
-              <a class="dropdown-item" href="javascript:void();">Another action</a>
-              <a class="dropdown-item" href="javascript:void();">Something else here</a>
-              <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="javascript:void();">Separated link</a>
-               </div>
               </div>
              </div>
            </div>
@@ -48,12 +40,26 @@
                <tbody>
                  <tr>
                    <td><i class="fa fa-circle text-white mr-2"></i>ON/OFF</td>
+                   {% if staList[5] == 0 %}
+                   <td>TOTAL: {{staList[0][0]}}</td>
+                   <td>Ratio: 0.0%</td>
+                 </tr>
+                 <tr>
+                   <td><i class="fa fa-circle text-light-1 mr-2"></i>Color Temperature</td>
+                   <td>TOTAL: {{staList[1][0]}}</td>
+                   <td>Ratio: {0.0%</td>
+                 </tr>
+                 <tr>
+                   <td><i class="fa fa-circle text-light-2 mr-2"></i>Dim Level</td>
+                   <td>TOTAL: {{staList[2][0]}}</td>
+                   <td>Ratio: 0.0%</td>
+                   {% else %}
                    <td>TOTAL: {{staList[0][0]}}</td>
                    <td>Ratio: {{'%.1f'|format(staList[
                    0][0]/staList[5]*100)}}%</td>
                  </tr>
                  <tr>
-                   <td><i class="fa fa-circle text-light-1 mr-2"></i>Color Temperature</td>
+                   <td><i class="fa fa-circle text-light-1 mr-2"></i>Color Temperaturejmn </td>
                    <td>TOTAL: {{staList[1][0]}}</td>
                    <td>Ratio: {{'%.1f'|format(staList[1][0]/staList[5]*100)}}%</td>
                  </tr>
@@ -61,27 +67,20 @@
                    <td><i class="fa fa-circle text-light-2 mr-2"></i>Dim Level</td>
                    <td>TOTAL: {{staList[2][0]}}</td>
                    <td>Ratio: {{'%.1f'|format(staList[2][0]/staList[5]*100)}}%</td>
+                   {% endif %}
                  </tr>
                </tbody>
              </table>
            </div>
          </div>
      </div>
-      <div class="col-12 col-lg-4 col-xl-4">
+      <div class="col-12 col-lg-6 col-xl-6">
         <div class="card">
            <div class="card-header" style="font-size: 20px; color:#f78c97">Total NG {{staList[3]}}
              <div class="card-action">
              <div class="dropdown">
              <a href="javascript:void();" class="dropdown-toggle dropdown-toggle-nocaret" data-toggle="dropdown">
-             <!-- <i class="icon-options"></i> -->
              </a>
-              <div class="dropdown-menu dropdown-menu-right">
-              <a class="dropdown-item" href="javascript:void();">Action</a>
-              <a class="dropdown-item" href="javascript:void();">Another action</a>
-              <a class="dropdown-item" href="javascript:void();">Something else here</a>
-              <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="javascript:void();">Separated link</a>
-               </div>
               </div>
              </div>
            </div>
@@ -95,6 +94,20 @@
                <tbod>
                  <tr style="color:rgba(247, 140, 151)">
                    <td><i class="fa fa-circle text-white mr-2" style="color:rgba(247, 140, 151) !important"></i>ON/OFF</td>
+                   {% if staList[3] == 0 %} 
+                  <td>TOTAL: {{staList[0][2]}}</td>
+                   <td>Ratio: 0.0%</td>
+                 </tr>
+                 <tr style="color:rgba(247, 140, 151)">
+                   <td><i class="fa fa-circle text-light-1 mr-2" style="color:rgba(247, 140, 151, 0.70) !important"></i>Color Temperature</td>
+                   <td>TOTAL: {{staList[1][2]}}</td>
+                   <td>Ratio: 0.0%</td>
+                 </tr>
+                 <tr style="color:rgba(247, 140, 151)">
+                   <td><i class="fa fa-circle text-light-2 mr-2" style="color:rgba(247, 140, 151, 0.60) !important"></i>Dim Level</td>
+                   <td>TOTAL: {{staList[2][2]}}</td>
+                   <td>Ratio: 0.0%</td>
+                 {% else %}
                    <td>TOTAL: {{staList[0][2]}}</td>
                    <td>Ratio: {{'%.1f'|format(staList[
                    0][2]/staList[3]*100)}}%</td>
@@ -108,7 +121,9 @@
                    <td><i class="fa fa-circle text-light-2 mr-2" style="color:rgba(247, 140, 151, 0.60) !important"></i>Dim Level</td>
                    <td>TOTAL: {{staList[2][2]}}</td>
                    <td>Ratio: {{'%.1f'|format(staList[2][2]/staList[3]*100)}}%</td>
+                   {% endif %}
                  </tr>
+
                </tbody>
              </table>
            </div>
@@ -140,13 +155,22 @@
   <div class="row">
    <div class="col-12 col-lg-12">
      <div class="card">
-       <div class="card-header">Bluetooth Command Report
+       <div class="card-header">Zigbee Command Report
       <div class="card-action">
              <div class="dropdown">
              <a href="javascript:void();" class="dropdown-toggle dropdown-toggle-nocaret" data-toggle="dropdown">
               <input class='showpacket' type="button" value="ALL_PKT" onclick="zzz()">
               </input>
             </a>
+              <form class="form-inline" method="POST" action="{{ url_for('bluetooth_report') }}" style="float: left; margin-right: 20px">
+                <select name="FileName" class="selectpicker form-control">
+                   {% for fileName in fileList %}
+                 <option value="{{ fileName }}">{{ fileName }}</option> 
+                   {% endfor %}
+                  }
+                </select>
+                <button type="submit" class="btn btn-default" style="color:#ffffff">Load</button> 
+              </form>
               </div>
              </div>
      </div>
@@ -156,7 +180,6 @@
                    <tr>
                      <th>Index</th>
                      <th>Command Type</th>
-                     <th>Command Value</th>
                      <th>Source</th>
                      <th>Flow</th>
                      <th>Destination</th>
@@ -166,7 +189,7 @@
                    </tr>
                    </thead>
                    <tbody>
-                     {% for transNum, cmdType, src, dst, success, sndtime, rcvtime, errcode in fileList %}
+                     {% for fileNumber, transNum, pktNum, cmd, cmd_val, dst, src, time, errcode in bleList %}
                       {% if success == "Success" %}
                         <tr class="should_hide" style="color:#07c733; display: none;">
                           <td>{{transNum}}</td>

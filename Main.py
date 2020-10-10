@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import render_template
-from flask import request as flask_request
+from flask import request 
 from flask import session
 from flask import send_file
 from flask import send_from_directory
@@ -23,21 +23,13 @@ from app.module.DB import dbModule
 import zigbee
 import bluetooth
 
-import DBlogging
-import reportExport
-import DBload as DB
+#import DBlogging
+#import reportExport
+#import DBload as DB
 
 HOST_ADDRESS = '127.0.0.1'
 
 HOST_PORT = 8085
-
-# 생각해보면 사용자가 저장여부 판단하지 않을 것으로 예상하는데, db 저장은 백엔드에서 다 구현하고 알아서 필터링 해야하지 않을까
-# 1. 파일 로드
-# 2. 필터링 및 로그 파일 생성해서 사용자에게 보여주거나 다운가능하도록
-# 3. 필터링 한 데이터는 DB로 바로 저장(로그 파일도 따로 만들고)
-# 4. DB 테이블을 프로토콜 별로 만들까? 뭘 기준으로 나눠서 해야할까
-# 5. 졸프 ppt 분석할 필요 있음
-# 6. 남의 PC에서 local DB 쓰면 어케되는거지? MySQL 사용하면?
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -71,12 +63,28 @@ def zbee_log():
     return render_template('log_list.html', protocol='zbee', zbeeList=log_file)
 
 
-@app.route("/bluetooth_report")
+@app.route("/bluetooth_report", methods=['POST', 'GET'])
 def bluetooth_report():
-    db = DB.DB_LOAD()
-    ble_file_list = db.ble_file_load()
+    if request.method =="POST":
+        result = request.form.get('FileName')
+        print(result)
+        ble = bluetooth.BluetoothCheck()
+        ble_file_list = ble.get_file()
+        ble.write_command_extract(result)
+        ble_list, ble_statistics, t = ble.write_command_succeed_check()
+        return render_template('bluetooth_report.html', bleList=ble_list, staList=ble_statistics, fileList=ble_file_list)
+
+    #db = DB.DB_LOAD()
+    #ble_file_list = db.ble_file_load()
        
-    ble_list, ble_statistics = db.ble_lists_from_DB(ble_file_list[0])
+    #ble_list, ble_statistics = db.ble_lists_from_DB(ble_file_list[0])
+    ble = bluetooth.BluetoothCheck()
+    ble_file_list = ble.get_file()
+    print(ble_file_list)
+    for i in ble_file_list:
+        ble.write_command_extract(i)
+        ble_list, ble_statistics, t = ble.write_command_succeed_check()
+        break
     return render_template('bluetooth_report.html', bleList=ble_list, staList=ble_statistics, fileList=ble_file_list)
 
 
@@ -173,7 +181,7 @@ def update():
 # default host address 127.0.0.1
 # host port numer 8085
 if __name__ == "__main__":
-    HOST_ADDRESS = socket.gethostbyname(socket.getfqdn())
+    #HOST_ADDRESS = socket.gethostbyname(socket.getfqdn())
 
     print('Start Main')
     
