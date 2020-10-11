@@ -162,8 +162,9 @@
               <input class='showpacket' type="button" value="ALL_PKT" onclick="zzz()">
               </input>
             </a>
-              <form class="form-inline" method="POST" action="{{ url_for('bluetooth_report') }}" style="float: left; margin-right: 20px">
+              <form class="form-inline" method="POST" action="{{ url_for('zigbee_report') }}" style="float: left; margin-right: 20px">
                 <select name="FileName" class="selectpicker form-control">
+                   <option value="" selected disabled hidden>{{ selectedpkt }}</option>
                    {% for fileName in fileList %}
                  <option value="{{ fileName }}">{{ fileName }}</option> 
                    {% endfor %}
@@ -180,28 +181,33 @@
                    <tr>
                      <th>Index</th>
                      <th>Command Type</th>
+                     <th>Command Value</th>
                      <th>Source</th>
                      <th>Flow</th>
                      <th>Destination</th>
                      <th>Success</th>
                      <th>Send Time</th>
                      <th>Error Code</th>
+                     <th>Packet State</th>
                    </tr>
                    </thead>
                    <tbody>
-                     {% for fileNumber, transNum, pktNum, cmd, cmd_val, dst, src, time, errcode in bleList %}
-                      {% if success == "Success" %}
+                     {% for fileNumber, transNum, pktNum, cmd, cmd_val, dst, src, time, pkt_state, pkt_msg, success in bleList %}
+                      {% if success == "success" %}
                         <tr class="should_hide" style="color:#07c733; display: none;">
                           <td>{{transNum}}</td>
                           <td>{{cmdType}}</td>
+                          <td>{{cmd_val}}</td>
                           <td>{{src}}</td>
                           <td>
                           ------▶
                           </td>
                           <td>{{dst}}</td>
-                          <td>{{success}}</td>
+                          <td>{{time}}</td>
                           <td>{{sndtime}}</td>
-                          <td>{{errcode}} (Success)</td>
+                          <td>{{pkt_msg}}</td>
+                          <td>0 (Success)</td>
+                          <td>{{pkt_state}}</td>
                         </tr>
                         <tr class="should_hide" style="color:#07c733; display: none;">
                           <td></td>
@@ -212,14 +218,23 @@
                           </td>
                           <td>{{dst}}</td>
                           <td></td>
-                          <td>{{rcvtime}}</td>
+                          <td></td>
                           <td></td>
                         </tr>
                       {% else %}
                         <tr style="color:#f78c97">
                           <td>{{transNum}}</td>
                           <td>{{cmdType}}</td>
+                          <td>{{cmd_val}}</td>
                           <td>{{src}}</td>
+                          <td>
+                          ------▶
+                          </td>
+                          <td>{{dst}}</td>
+                          <td>{{time}}</td>
+                          <td>{{sndtime}}</td>
+                          <td>0 (Success)</td>
+                          <td>{{pkt_state}}</td>
                           {% if errcode == 1 %}
                           <td>
                           --X--▶

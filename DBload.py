@@ -117,11 +117,52 @@ class DB_LOAD:
                         sql = 'select * from transaction_zigbee where file_number=(%s)'
                         curs.execute(sql, (file_number))
                         zbee_transaction_list = curs.fetchall()
-                        
+
+                        sql = 'select count(*) from transaction_zbee where file_number=(%s) and command=(%s)'
+                        curs.execute(sql, (file_number, "On/Off"))
+                        onoff_cmd = curs.fetchone()[0]
+
+                        sql = 'select count(*) from transaction_ble where file_number=(%s) and command=(%s)'
+                        curs.execute(sql, (file_number,"level"))
+                        dim_cmd = curs.fetchone()[0]
+
+                        sql = 'select count(*) from transaction_ble where file_number=(%s) and command=(%s)'
+                        curs.execute(sql, (file_number,"color"))
+                        ctmp_cmd = curs.fetchone()[0]
+
+                        sql = 'select count(*) from transaction_ble where file_number=(%s) and command=(%s) and ng=(%s)'
+                        curs.execute(sql, (file_number,"OnOff", "NG"))
+                        ng_onoff = curs.fetchone()[0]
+
+                        sql = 'select count(*) from transaction_ble where file_number=(%s) and command=(%s) and ng=(%s)'
+                        curs.execute(sql, (file_number,"Dim Level", "NG"))
+                        ng_dim = curs.fetchone()[0]
+
+                        sql = 'select count(*) from transaction_ble where file_number=(%s) and command=(%s) and ng=(%s)'
+                        curs.execute(sql, (file_number,"Color Temp", "NG"))
+                        ng_ctmp = curs.fetchone()[0]
+
+                        suc_onoff = onoff_cmd - ng_onoff
+                        suc_ctmp = ctmp_cmd - ng_ctmp
+                        suc_dim = dim_cmd - ng_dim
+                        ng_total = ng_onoff+ng_ctmp+ng_dim
+                        suc_total = suc_ctmp+suc_dim+suc_onoff
+
+                        zbee_statistics = [[onoff_cmd,suc_onoff,ng_onoff], [ctmp_cmd,suc_ctmp,ng_ctmp], [dim_cmd,suc_dim,ng_dim],
+                                                        ng_total, suc_total, len(zbee_transaction_list)
+                                                        ]
+
+                        for i in zbee_packet_list:
+                            flag = 0
+                            for j in zbee_transaction_list:
+                                if i[0] == j[0] && i[1] == j[1]:
+                                    i.append(j[4])
+
+
                 finally:
                         conn.close()
                 
-                        return zbee_ng_list, zbee_transaction_list
+                        return zbee_ng_list, zbee_packet_list, zbee_statistics
 
 db = DB_LOAD()
 ble_file_list = db.ble_file_load()

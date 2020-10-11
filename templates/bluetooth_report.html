@@ -164,8 +164,9 @@
             </a>
               <form class="form-inline" method="POST" action="{{ url_for('bluetooth_report') }}" style="float: left; margin-right: 20px">
                 <select name="FileName" class="selectpicker form-control">
+                  <option value="" selected disabled hidden>{{ selectedpkt }}</option>
                    {% for fileName in fileList %}
-                 <option value="{{ fileName }}">{{ fileName }}</option> 
+                 <option value="{{ fileName }}">{{ fileName }}</option> qa
                    {% endfor %}
                   }
                 </select>
@@ -189,7 +190,7 @@
                    </tr>
                    </thead>
                    <tbody>
-                     {% for fileNumber, transNum, cmdType, src, dst, success, sndtime, rcvtime, errcode in bleList %}
+                     {% for  transNum, cmdType, src, dst, success, sndtime, rcvtime, errcode in bleList %}
                       {% if success == "Success" %}
                         <tr class="should_hide" style="color:#07c733; display: none;">
                           <td>{{transNum}}</td>
