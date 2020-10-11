@@ -20,6 +20,7 @@ file number,transaction number,command,command value,NG
 1,19,level,25,OK
 1,20,color,250,OK
 1,21,On/Off,0,OK
+1,22,On/Off,1,OK
 1,23,color,286,OK
 1,24,color,200,OK
 1,25,level,127,OK

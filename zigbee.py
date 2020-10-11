@@ -18,6 +18,7 @@ key_list = ['zbee_zcl', 'zbee_zcl.cmd.tsn']
 on_time = 0.7
 level_time = 0.85
 color_time = 2.7
+color_hub_diff = 2.0
 
 # DB에 로깅할 형태로 가공한 데이터 리스트
 hub_db = [] 
@@ -249,35 +250,60 @@ class ZigbeeCheck:
                 transaction = [] # 트랜잭션 번호, NG여부(Warning 포함), 커맨드, 커맨드값
 
                 # 커맨드 패킷 리스트의 follow를 위한 변수
-                cmdFrame = self.command_send[command_idx]['frame'] # 프레임 번호, 시간기록용
-                cmdZcl = self.command_send[command_idx]['zbee_zcl'] # 커맨드, 커맨드 값 기록용
+
+                if command_idx < len(self.command_send):
+                        cmdFrame = self.command_send[command_idx]['frame'] # 프레임 번호, 시간기록용
+                        cmdZcl = self.command_send[command_idx]['zbee_zcl'] # 커맨드, 커맨드 값 기록용
+                        prevCmd = self.command_send[command_idx-1]['zbee_zcl']
+                        
+                else:
+                        cmdFrame = self.command_send[command_idx-1]['frame']
+                        cmdZcl = self.command_send[command_idx-1]['zbee_zcl'] # 커맨드, 커맨드 값 기록용
+                        prevCmd = self.command_send[command_idx-2]['zbee_zcl']
+
                 cmdSeq = cmdZcl['zbee_zcl.cmd.tsn'] # 커맨드 sequence 번호
                 cmdOK = False # 커맨드 패킷 존재 유무
 
-                prevCmd = self.command_send[command_idx-1]['zbee_zcl']
                         
                 if command_idx < len(self.command_send)-1:
                         nextCmd = self.command_send[command_idx+1]['zbee_zcl']
+                elif command_idx == len(self.command_send):
+                        nextCmd = self.command_send[command_idx]['zbee_zcl']
                 else:
                         nextCmd = dict()
 
 
                 # 허브 리스트의 follow를 위한 변수
-                hub = self.hubData[hub_idx]
+                if hub_idx < len(self.hubData):
+                        hub = self.hubData[hub_idx]
+                        prevHub = self.hubData[hub_idx-1]
+                        
+                else:
+                        hub = self.hubData[hub_idx-1]
+                        prevHub = self.hubData[hub_idx-2]
+                
                 hubOK = False # 허브 기록 존재 유무
 
-                prevHub = self.hubData[hub_idx-1]
-
+                
                 if hub_idx < len(self.hubData)-1:
                         nextHub = self.hubData[hub_idx+1]
+                elif hub_idx == len(self.hubData)-1:
+                        nextHub = self.hubData[hub_idx]
                 else:
-                        nextHub = {'name':''}
+                        nextHub = dict()
 
                 
                 #1 hub와 command 비교: 시간대를 보면서 더 이른 쪽에 인덱스 증가, 늦은 쪽은 인덱스 유지, 같은 명령어에 시간대 이내면 두 인덱스 증가
-                hub_time = datetime.datetime.strptime(hub['date'].replace('오후', 'PM').replace('오전', 'AM'), '%Y-%m-%d %I:%M:%S.%f %p KST')
-                cmd_time = datetime.datetime.strptime(cmdFrame['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
-                
+                if hub_idx == len(self.hubData):
+                        hub_time = datetime.datetime.strptime(cmdFrame['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시') + datetime.timedelta(minutes=10)
+                else:
+                        hub_time = datetime.datetime.strptime(hub['date'].replace('오후', 'PM').replace('오전', 'AM'), '%Y-%m-%d %I:%M:%S.%f %p KST')
+
+                if command_idx == len(self.command_send):
+                        cmd_time = datetime.datetime.strptime(hub['date'].replace('오후', 'PM').replace('오전', 'AM'), '%Y-%m-%d %I:%M:%S.%f %p KST') + datetime.timedelta(minutes=10)
+                else:
+                        cmd_time = datetime.datetime.strptime(cmdFrame['frame.time'], '%b %d, %Y %H:%M:%S.%f000 대한민국 표준시')
+
                 diff = self.timedelta2float(hub_time - cmd_time)
 
                 if hub_time < self.cmd_first_time:
@@ -295,7 +321,6 @@ class ZigbeeCheck:
 
                 if not (packets and packets[-1][-1] == 9):
                         trans_idx += 1
-                
 
                 if hub['name'] == 'switch':
                         
@@ -445,7 +470,7 @@ class ZigbeeCheck:
                 
                 seqCompare = response['zbee_zcl']['zbee_zcl.cmd.tsn']
                 response = response['frame']
-
+                
 
                 if hubOK and cmdOK:
                         
@@ -454,6 +479,7 @@ class ZigbeeCheck:
                                         
                         else:
                                 transaction.append('OK')
+
 
                         while seqCompare < cmdSeq:
                                 response_idx += 1
@@ -483,9 +509,13 @@ class ZigbeeCheck:
                                         NG_packets.append([trans_idx, 2])
 
                         hub_db.append([trans_idx, hub['source'], cmdStr, hub['value'], hub_time])
-
+                        
                         if (nextCmd.get(cmdKey[2]) or nextHub['name'] == 'colorTemperature') and hub['value'] == 'on':
-                                return cmd_time
+                                next_hub_time = datetime.datetime.strptime(nextHub['date'].replace('오후', 'PM').replace('오전', 'AM'), '%Y-%m-%d %I:%M:%S.%f %p KST')
+                                diff = self.timedelta2float(next_hub_time - hub_time)
+                                
+                                if diff < color_hub_diff:
+                                        return cmd_time
                                 
                                 
                 elif cmdOK:
@@ -537,8 +567,8 @@ class ZigbeeCheck:
                         hub_db.append([trans_idx, hub['source'], cmdStr, hub['value'], hub_time])
                                         
                 transactions.append(transaction)
-
-                if cmdOK and change:
+                
+                if (cmdOK and change) or (cmdOK and cmdStr == 'color'):
                         return cmd_time
                 
                 elif hubOK:
@@ -814,7 +844,7 @@ class ZigbeeCheck:
                         
 
         def errorCheck(self):
-                while hub_idx < len(self.hubData) and command_idx < len(self.command_send):
+                while hub_idx < len(self.hubData) or command_idx < len(self.command_send):
                         time = self.makeTransaction(command_key, command_value)
                         
                         if time != None:

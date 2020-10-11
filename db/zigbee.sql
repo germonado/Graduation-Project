@@ -40,6 +40,7 @@ CREATE TABLE Packet_Zigbee
 	packet_number        integer  NOT NULL ,
 	command              varchar(20)  NULL ,
 	command_value        integer  NULL ,
+	NG					 varchar(20)  NULL ,
 	destination          varchar(20)  NULL ,
 	source               varchar(20)  NULL ,
 	time                 datetime  NULL,

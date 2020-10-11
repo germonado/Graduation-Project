@@ -159,7 +159,7 @@
       <div class="card-action">
              <div class="dropdown">
              <a href="javascript:void();" class="dropdown-toggle dropdown-toggle-nocaret" data-toggle="dropdown">
-              <input class='showpacket' type="button" value="ALL_PKT" onclick="zzz()">
+              <input class='showpacket' type="button" value="ALL_PKT">
               </input>
             </a>
               <form class="form-inline" method="POST" action="{{ url_for('zigbee_report') }}" style="float: left; margin-right: 20px">
@@ -192,11 +192,11 @@
                    </tr>
                    </thead>
                    <tbody>
-                     {% for fileNumber, transNum, pktNum, cmd, cmd_val, dst, src, time, pkt_state, pkt_msg, success in bleList %}
-                      {% if success == "success" %}
+                     {% for fileNumber, transNum, pktNum, cmd, cmd_val, pkt_msg, dst, src, time, pkt_state in zbeeList %}
+                      {% if success != "NG" %}
                         <tr class="should_hide" style="color:#07c733; display: none;">
                           <td>{{transNum}}</td>
-                          <td>{{cmdType}}</td>
+                          <td>{{cmd}}</td>
                           <td>{{cmd_val}}</td>
                           <td>{{src}}</td>
                           <td>
@@ -224,7 +224,7 @@
                       {% else %}
                         <tr style="color:#f78c97">
                           <td>{{transNum}}</td>
-                          <td>{{cmdType}}</td>
+                          <td>{{cmd}}</td>
                           <td>{{cmd_val}}</td>
                           <td>{{src}}</td>
                           <td>
@@ -242,7 +242,7 @@
                           <td>{{dst}}</td>
                           <td>{{success}}</td>
                           <td>X</td>
-                          <td>{{errcode}} (No Command Send)</td>
+                          <td>{{pkt_state}} (No Command Send)</td>
                           {% else %}
                           <td>
                           ------▶
@@ -250,14 +250,14 @@
                           <td>{{dst}}</td>
                           <td>{{success}}</td>
                           <td>{{sndtime}}</td>
-                          <td>{{errcode}} (No Command Response)</td>
+                          <td>{{pkt_state}} (No Command Response)</td>
                           {% endif %}
                         </tr>
                         <tr style="color:#f78c97">
                           <td></td>
                           <td></td>
                           <td>{{src}}</td>
-                          {% if errcode == 2 %}
+                          {% if pkt_state == 2 %}
                           <td>
                           ◀--X--
                           </td>

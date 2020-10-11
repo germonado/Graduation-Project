@@ -23,9 +23,9 @@ from app.module.DB import dbModule
 import zigbee
 import bluetooth
 
-#import DBlogging
-#import reportExport
-#import DBload as DB
+import DBlogging
+import reportExport
+import DBload as DB
 
 HOST_ADDRESS = '127.0.0.1'
 
@@ -102,15 +102,17 @@ def zigbee_report():
         return render_template('zigbee_report.html', fileList=zbee_file_list, zbeeList=zbee_list, staList=zbee_statistics, selectedpkt=result)
 
     zbee_ng_list, zbee_list, zbee_statistics = db.zbee_lists_from_DB(zbee_file_list[0])
+    '''
     for i in zbee_list:
         flag = 0
         for j in zbee_ng_list:
-            if i[8] == zbee_ng_list[2] && i[0] == zbee_ng_list[0] && i[1] == zbee_ng_list[1]:
+            if i[8] == zbee_ng_list[2] and i[0] == zbee_ng_list[0] and i[1] == zbee_ng_list[1]:
                 i.append("Error")
                 flag = 1
         if flag == 0:
             i.append("Success")
-
+    '''
+    print(zbee_statistics)
 
     return render_template('zigbee_report.html', fileList=zbee_file_list, zbeeList=zbee_list, staList=zbee_statistics, selectedpkt=zbee_file_list[0])
 
@@ -138,8 +140,8 @@ def registration():
 @app.route('/log_file_download')
 def log_file_download():
     path = "./log_data/"
-    protocol = flask_request.args.get('protocol', None)
-    file_name = flask_request.args.get('file_name', None)
+    protocol = request.args.get('protocol', None)
+    file_name = request.args.get('file_name', None)
     return send_file(path + '/' + protocol + '/' + file_name, attachment_filename=file_name, as_attachment=True)
 
 # INSERT 함수 예제

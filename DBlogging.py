@@ -73,9 +73,8 @@ def zbeeToDB(packetFiles, hubFiles):
             NG_packets = []
 
             zb = zigbee.ZigbeeCheck()
-            
             hub_db, transactions, packets, NG_packets = zb.exportLogList(packet, hub)
-
+            
             sql = 'insert ignore into file_zigbee values (%s, %s)'
             curs.execute(sql, (file_idx, packet))
 
@@ -112,9 +111,14 @@ def zbeeToDB(packetFiles, hubFiles):
                     
 
             for p in packets:
-                sql = 'insert ignore into packet_zigbee values(%s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                
                 p.insert(0, file_idx)
 
+                sql = 'select NG from transaction_zigbee where file_number = (%s) and transaction_number = (%s)'
+                curs.execute(sql, (file_idx, p[1]))
+                ngStr = curs.fetchone()[0]
+                
+                p.insert(5, ngStr)
 
                 if '0x' in p[4]:
                     p[4] = int(p[4], 16)
@@ -128,8 +132,8 @@ def zbeeToDB(packetFiles, hubFiles):
                 else:
                     p[4] = int(p[4])
                     
-                        
                 p = tuple(p)
+                sql = 'insert ignore into packet_zigbee values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
                 curs.execute(sql, p)
 
 
@@ -148,5 +152,5 @@ def zbeeToDB(packetFiles, hubFiles):
         conn.close()
 
 
-bleToDB(get_file(b_file))
-zbeeToDB(get_file(p_file), get_file(h_file))
+#bleToDB(get_file(b_file))
+#zbeeToDB(get_file(p_file), get_file(h_file))

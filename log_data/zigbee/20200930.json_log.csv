@@ -1,9 +1,10 @@
 file number,transaction number,command,command value,NG
 0,1,On/Off,0,OK(Sniffing Error)
-0,2,color,286,OK
+0,2,On/Off,1,OK
 0,3,color,370,OK
 0,4,On/Off,0,OK
-0,5,color,200,OK
+0,5,On/Off,1,OK
 0,6,color,250,OK
 0,7,color,370,OK
 0,8,On/Off,0,OK
+0,9,color,370,OK

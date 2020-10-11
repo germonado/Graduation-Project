@@ -98,6 +98,7 @@ class DB_LOAD:
                        db='zigbee', charset='utf8')
 
                 curs = conn.cursor()
+                zbee_statistics = []
                 file_idx = 0
 
                 try:
@@ -118,27 +119,27 @@ class DB_LOAD:
                         curs.execute(sql, (file_number))
                         zbee_transaction_list = curs.fetchall()
 
-                        sql = 'select count(*) from transaction_zbee where file_number=(%s) and command=(%s)'
+                        sql = 'select count(*) from transaction_zigbee where file_number=(%s) and command=(%s)'
                         curs.execute(sql, (file_number, "On/Off"))
                         onoff_cmd = curs.fetchone()[0]
 
-                        sql = 'select count(*) from transaction_ble where file_number=(%s) and command=(%s)'
+                        sql = 'select count(*) from transaction_zigbee where file_number=(%s) and command=(%s)'
                         curs.execute(sql, (file_number,"level"))
                         dim_cmd = curs.fetchone()[0]
 
-                        sql = 'select count(*) from transaction_ble where file_number=(%s) and command=(%s)'
+                        sql = 'select count(*) from transaction_zigbee where file_number=(%s) and command=(%s)'
                         curs.execute(sql, (file_number,"color"))
                         ctmp_cmd = curs.fetchone()[0]
 
-                        sql = 'select count(*) from transaction_ble where file_number=(%s) and command=(%s) and ng=(%s)'
+                        sql = 'select count(*) from transaction_zigbee where file_number=(%s) and command=(%s) and NG=(%s)'
                         curs.execute(sql, (file_number,"OnOff", "NG"))
                         ng_onoff = curs.fetchone()[0]
 
-                        sql = 'select count(*) from transaction_ble where file_number=(%s) and command=(%s) and ng=(%s)'
+                        sql = 'select count(*) from transaction_zigbee where file_number=(%s) and command=(%s) and NG=(%s)'
                         curs.execute(sql, (file_number,"Dim Level", "NG"))
                         ng_dim = curs.fetchone()[0]
 
-                        sql = 'select count(*) from transaction_ble where file_number=(%s) and command=(%s) and ng=(%s)'
+                        sql = 'select count(*) from transaction_zigbee where file_number=(%s) and command=(%s) and NG=(%s)'
                         curs.execute(sql, (file_number,"Color Temp", "NG"))
                         ng_ctmp = curs.fetchone()[0]
 
@@ -152,11 +153,6 @@ class DB_LOAD:
                                                         ng_total, suc_total, len(zbee_transaction_list)
                                                         ]
 
-                        for i in zbee_packet_list:
-                            flag = 0
-                            for j in zbee_transaction_list:
-                                if i[0] == j[0] && i[1] == j[1]:
-                                    i.append(j[4])
 
 
                 finally:

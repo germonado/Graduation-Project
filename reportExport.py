@@ -97,7 +97,7 @@ def csvExport(bleFiles, zbeeFiles):
                 zbeeCSV.append(newName)
 
                 # 해당 file_idx인 것 패킷에서 select해오기
-                sql = '''SELECT 'file number', 'transaction number', 'packet number', 'command', 'command value', 'dest',
+                sql = '''SELECT 'file number', 'transaction number', 'packet number', 'command', 'command value', 'NG', 'dest',
                         'src', 'time', 'location' UNION '''
                 sql += 'select * from packet_zigbee where file_number = (%s)\n'
                 sql += '''INTO OUTFILE %s\n'''
