@@ -183,101 +183,85 @@
                      <th>Command Type</th>
                      <th>Command Value</th>
                      <th>Source</th>
-                     <th>Flow</th>
                      <th>Destination</th>
-                     <th>Success</th>
-                     <th>Send Time</th>
-                     <th>Error Code</th>
+                     <th>Time</th>
+                     <th>NG/OK</th>
                      <th>Packet State</th>
                    </tr>
                    </thead>
                    <tbody>
                      {% for fileNumber, transNum, pktNum, cmd, cmd_val, pkt_msg, dst, src, time, pkt_state in zbeeList %}
+                      
                       {% if success != "NG" %}
                         <tr class="should_hide" style="color:#07c733; display: none;">
                           <td>{{transNum}}</td>
                           <td>{{cmd}}</td>
                           <td>{{cmd_val}}</td>
                           <td>{{src}}</td>
-                          <td>
-                          ------▶
-                          </td>
                           <td>{{dst}}</td>
                           <td>{{time}}</td>
-                          <td>{{sndtime}}</td>
                           <td>{{pkt_msg}}</td>
-                          <td>0 (Success)</td>
                           <td>{{pkt_state}}</td>
-                        </tr>
-                        <tr class="should_hide" style="color:#07c733; display: none;">
-                          <td></td>
-                          <td></td>
-                          <td>{{src}}</td>
-                          <td>
-                          ◀------
-                          </td>
-                          <td>{{dst}}</td>
-                          <td></td>
-                          <td></td>
-                          <td></td>
-                        </tr>
+                      <!--  </tr> -->
                       {% else %}
                         <tr style="color:#f78c97">
                           <td>{{transNum}}</td>
                           <td>{{cmd}}</td>
                           <td>{{cmd_val}}</td>
                           <td>{{src}}</td>
-                          <td>
-                          ------▶
-                          </td>
                           <td>{{dst}}</td>
                           <td>{{time}}</td>
-                          <td>{{sndtime}}</td>
-                          <td>0 (Success)</td>
+                          <td>{{pkt_msg}}</td>
                           <td>{{pkt_state}}</td>
-                          {% if errcode == 1 %}
-                          <td>
-                          --X--▶
-                          </td>
-                          <td>{{dst}}</td>
-                          <td>{{success}}</td>
-                          <td>X</td>
-                          <td>{{pkt_state}} (No Command Send)</td>
-                          {% else %}
-                          <td>
-                          ------▶
-                          </td>
-                          <td>{{dst}}</td>
-                          <td>{{success}}</td>
-                          <td>{{sndtime}}</td>
-                          <td>{{pkt_state}} (No Command Response)</td>
-                          {% endif %}
-                        </tr>
-                        <tr style="color:#f78c97">
-                          <td></td>
-                          <td></td>
-                          <td>{{src}}</td>
-                          {% if pkt_state == 2 %}
-                          <td>
-                          ◀--X--
-                          </td>
-                          <td>{{dst}}</td>
-                          <td></td>
-                          <td>X</td>
-                          <td></td>
-                          {% else %}
-                          <td>
-                          ◀------
-                          </td>
-                          <td>{{dst}}</td>
-                          <td></td>
-                          <td>{{rcvtime}}</td>
-                          <td></td>
-                          {% endif %}
-                        </tr>
+                      <!--  </tr> -->
                       {% endif %}
+                      {% if cmd == "On/Off" && pkt_state == 1 %}
+                        <td>{{pkt_state}} Command NG</td>
+                      {% elif cmd == "On/Off" && pkt_state == 2 %}
+                        <td>{{pkt_state}} Command Response NG</td>
+                      {% elif cmd == "On/Off" && pkt_state == 3 %}
+                        <td>{{pkt_state}} Report NG</td>
+                      {% elif cmd == "On/Off" && pkt_state == 4 %}
+                        <td>{{pkt_state}} Report NG(Hub->Edge)</td>
+                      {% elif cmd == "On/Off" && pkt_state == 5 %}
+                        <td>{{pkt_state}} Report Response NG(Edge->Hub)</td>
+                      {% elif cmd == "level" && pkt_state == 1 %}
+                        <td>{{pkt_state}} Command NG</td>
+                      {% elif cmd == "level" && pkt_state == 2 %}
+                        <td>{{pkt_state}} Command Response NG</td>
+                      {% elif cmd == "level" && pkt_state == 3 %}
+                        <td>{{pkt_state}} Report NG</td>
+                      {% elif cmd == "level" && pkt_state == 4 %}
+                        <td>{{pkt_state}} Report Response NG(Hub->Edge)</td>
+                      {% elif cmd == "level" && pkt_state == 5 %}
+                        <td>{{pkt_state}} Report Response NG(Edge->Hub)</td>
+                      {% elif cmd == "level" && pkt_state == 6 %}
+                        <td>{{pkt_state}} Report NG(OFF->ON)</td>
+                      {% elif cmd == "level" && pkt_state == 7 %}
+                        <td>{{pkt_state}} Report Reponse NG(OFF->ON, Hub->Edge)</td>
+                      {% elif cmd == "level" && pkt_state == 8 %}
+                        <td>{{pkt_state}} Report Response NG(OFF->ON, Edge->Hub)</td>
+                      {% elif cmd == "color" && pkt_state == 1 %}
+                        <td>{{pkt_state}} Command NG(ON)</td>
+                      {% elif cmd == "color" && pkt_state == 2 %}
+                        <td>{{pkt_state}} Command Response NG(ON)</td>
+                      {% elif cmd == "color" && pkt_state == 3 %}
+                        <td>{{pkt_state}} Command NG(Color)</td>
+                      {% elif cmd == "color" && pkt_state == 4 %}
+                        <td>{{pkt_state}} Command Reponse NG(Color)</td>
+                      {% elif cmd == "color" && pkt_state == 5 %}
+                        <td>{{pkt_state}} Read NG</td>
+                      {% elif cmd == "color" && pkt_state == 6 %}
+                        <td>{{pkt_state}} Read Reponse NG</td>
+                      {% elif cmd == "color" && pkt_state == 7 %}
+                        <td>{{pkt_state}} Report NG(OFF->ON)</td>
+                      {% elif cmd == "color" && pkt_state == 8 %}
+                        <td>{{pkt_state}} Report Response NG(OFF->ON, Hub->Edge)</td>
+                      {% elif cmd == "color" && pkt_state == 9 %}
+                        <td>{{pkt_state}} Report Response NG(OFF->ON, Edge->Hub)</td>
+                      {% endif %}
+                    </tr>
                   {% endfor %} 
-                  
                  </tbody></table>
                </div>
      </div>

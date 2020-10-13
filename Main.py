@@ -65,27 +65,16 @@ def zbee_log():
 
 @app.route("/bluetooth_report", methods=['POST', 'GET'])
 def bluetooth_report():
-    #db = DB.DB_LOAD()
-    #ble_file_list = db.ble_file_load()
+    db = DB.DB_LOAD()
+    ble_file_list = db.ble_file_load()
        
     if request.method =="POST":
         result = request.form.get('FileName')
-        print(result)
-        ble = bluetooth.BluetoothCheck()
-        ble_file_list = ble.get_file()
         ble.write_command_extract(result)
-        #ble_list, ble_statistics = db.ble_lists_from_DB(ble_file_list[0])
-        ble_list, ble_statistics, t = ble.write_command_succeed_check()
+        ble_list, ble_statistics = db.ble_lists_from_DB(ble_file_list[0])
         return render_template('bluetooth_report.html', bleList=ble_list, staList=ble_statistics, fileList=ble_file_list, selectedpkt=result)
 
-    #ble_list, ble_statistics = db.ble_lists_from_DB(ble_file_list[0])
-    ble = bluetooth.BluetoothCheck()
-    ble_file_list = ble.get_file()
-    print(ble_file_list)
-    for i in ble_file_list:
-        ble.write_command_extract(i)
-        ble_list, ble_statistics, t = ble.write_command_succeed_check()
-        break
+    ble_list, ble_statistics = db.ble_lists_from_DB(ble_file_list[0])
     return render_template('bluetooth_report.html', bleList=ble_list, staList=ble_statistics, fileList=ble_file_list, selectedpkt=ble_file_list[0])
 
 
@@ -96,24 +85,11 @@ def zigbee_report():
 
     if request.method =="POST":
         result = request.form.get('FileName')
-        print(result)
         db.zbee_lists_from_DB(result)
         zbee_ng_list, zbee_list, zbee_statistics = db.zbee_lists_from_DB(zbee_file_list[0])
         return render_template('zigbee_report.html', fileList=zbee_file_list, zbeeList=zbee_list, staList=zbee_statistics, selectedpkt=result)
 
     zbee_ng_list, zbee_list, zbee_statistics = db.zbee_lists_from_DB(zbee_file_list[0])
-    '''
-    for i in zbee_list:
-        flag = 0
-        for j in zbee_ng_list:
-            if i[8] == zbee_ng_list[2] and i[0] == zbee_ng_list[0] and i[1] == zbee_ng_list[1]:
-                i.append("Error")
-                flag = 1
-        if flag == 0:
-            i.append("Success")
-    '''
-    print(zbee_statistics)
-
     return render_template('zigbee_report.html', fileList=zbee_file_list, zbeeList=zbee_list, staList=zbee_statistics, selectedpkt=zbee_file_list[0])
 
 
