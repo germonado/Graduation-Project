@@ -20,12 +20,12 @@ from flask import Blueprint, request, render_template, flash, redirect, url_for
 from flask import current_app as current_app
  
 from app.module.DB import dbModule
-import zigbee
-import bluetooth
+from app.module.DB import DBlogging
+from app.module.DB import DBload as DB
+from app.module.Zigbee import zigbee
+from app.module.BLE import bluetooth
+from app.module.Report import reportExport
 
-import DBlogging
-import reportExport
-import DBload as DB
 
 HOST_ADDRESS = '127.0.0.1'
 
@@ -70,8 +70,7 @@ def bluetooth_report():
        
     if request.method =="POST":
         result = request.form.get('FileName')
-        ble.write_command_extract(result)
-        ble_list, ble_statistics = db.ble_lists_from_DB(ble_file_list[0])
+        ble_list, ble_statistics = db.ble_lists_from_DB(result)
         return render_template('bluetooth_report.html', bleList=ble_list, staList=ble_statistics, fileList=ble_file_list, selectedpkt=result)
 
     ble_list, ble_statistics = db.ble_lists_from_DB(ble_file_list[0])
