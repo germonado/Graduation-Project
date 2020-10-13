@@ -3,8 +3,8 @@ import sys
 import datetime
 import os
 import pymysql
-import zigbee
-import bluetooth
+from app.module.Zigbee import zigbee
+from app.module.BLE import bluetooth
 
 BLE_PATH = './exported_json/ble'
 ZBEE_PATH = './exported_json/zigbee'

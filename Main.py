@@ -18,8 +18,7 @@ import socket
 import random
 from flask import Blueprint, request, render_template, flash, redirect, url_for
 from flask import current_app as current_app
- 
-from app.module.DB import dbModule
+
 from app.module.DB import DBlogging
 from app.module.DB import DBload as DB
 from app.module.Zigbee import zigbee
