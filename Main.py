@@ -20,12 +20,12 @@ from flask import Blueprint, request, render_template, flash, redirect, url_for
 from flask import current_app as current_app
  
 from app.module.DB import dbModule
-import zigbee
-import bluetooth
+from app.module.DB import DBlogging
+from app.module.DB import DBload as DB
+from app.module.Zigbee import zigbee
+from app.module.BLE import bluetooth
+from app.module.Report import reportExport
 
-import DBlogging
-import reportExport
-import DBload as DB
 
 HOST_ADDRESS = '127.0.0.1'
 
@@ -70,48 +70,26 @@ def bluetooth_report():
        
     if request.method =="POST":
         result = request.form.get('FileName')
-        ble.write_command_extract(result)
-        ble_list, ble_statistics = db.ble_lists_from_DB(ble_file_list[0])
+        ble_list, ble_statistics = db.ble_lists_from_DB(result)
         return render_template('bluetooth_report.html', bleList=ble_list, staList=ble_statistics, fileList=ble_file_list, selectedpkt=result)
 
     ble_list, ble_statistics = db.ble_lists_from_DB(ble_file_list[0])
     return render_template('bluetooth_report.html', bleList=ble_list, staList=ble_statistics, fileList=ble_file_list, selectedpkt=ble_file_list[0])
 
 
-@app.route("/zigbee_report")
+@app.route("/zigbee_report", methods=['POST', 'GET'])
 def zigbee_report():
     db = DB.DB_LOAD()
     zbee_file_list = db.zbee_file_load()
 
     if request.method =="POST":
         result = request.form.get('FileName')
-        db.zbee_lists_from_DB(result)
-        zbee_ng_list, zbee_list, zbee_statistics = db.zbee_lists_from_DB(zbee_file_list[0])
+        zbee_ng_list, zbee_list, zbee_statistics = db.zbee_lists_from_DB(result)
         return render_template('zigbee_report.html', fileList=zbee_file_list, zbeeList=zbee_list, staList=zbee_statistics, selectedpkt=result)
 
     zbee_ng_list, zbee_list, zbee_statistics = db.zbee_lists_from_DB(zbee_file_list[0])
     return render_template('zigbee_report.html', fileList=zbee_file_list, zbeeList=zbee_list, staList=zbee_statistics, selectedpkt=zbee_file_list[0])
-
-
-@app.route("/tables")
-def tables():
-    return render_template('tables.html')
-
-@app.route("/profile")
-def profile():
-    return render_template('profile.html')
-
-@app.route("/calendar")
-def calendar():
-    return render_template('calendar.html')   
-
-@app.route("/login")
-def login():
-    return render_template('login.html')   
-
-@app.route("/register")
-def registration():
-    return render_template('register.html')       
+     
 
 @app.route('/log_file_download')
 def log_file_download():
@@ -120,64 +98,10 @@ def log_file_download():
     file_name = request.args.get('file_name', None)
     return send_file(path + '/' + protocol + '/' + file_name, attachment_filename=file_name, as_attachment=True)
 
-# INSERT 함수 예제
-@test.route('/insert', methods=['GET'])
-def insert():
-    db_class= dbModule.Database()
- 
-    sql     = "INSERT INTO testDB.testTable(test) \
-                VALUES('%s')"% ('testData')
-    db_class.execute(sql)
-    db_class.commit()
- 
-    return render_template('/test/test.html',
-                           result='insert is done!',
-                           resultData=None,
-                           resultUPDATE=None)
- 
- 
- 
-# SELECT 함수 예제
-@test.route('/select', methods=['GET'])
-def select():
-    db_class= dbModule.Database()
- 
-    sql     = "SELECT idx, test \
-                FROM testDB.testTable"
-    row     = db_class.executeAll(sql)
- 
-    print(row)
- 
-    return render_template('/test/test.html',
-                            result=None,
-                            resultData=row[0],
-                            resultUPDATE=None)
- 
- 
-# UPDATE 함수 예제
-@test.route('/update', methods=['GET'])
-def update():
-    db_class= dbModule.Database()
- 
-    sql     = "UPDATE testDB.testTable \
-                SET test='%s' \
-                WHERE test='testData'"% ('update_Data')
-    db_class.execute(sql)   
-    db_class.commit()
- 
-    sql     = "SELECT idx, test \
-                FROM testDB.testTable"
-    row     = db_class.executeAll(sql)
- 
-    return render_template('/test/test.html',
-                            result=None,
-                            resultData=None,
-                            resultUPDATE=row[0])
 
 # default host address 127.0.0.1
 # host port numer 8085
 if __name__ == "__main__":
-    #HOST_ADDRESS = socket.gethostbyname(socket.getfqdn())
 
     print('Start Main')
     
