@@ -4,18 +4,7 @@ from flask import request
 from flask import session
 from flask import send_file
 from flask import send_from_directory
-from flask_socketio import SocketIO
-from flask_socketio import emit
-from socket import *
-import numpy as np
-import wave
-import io
-import base64
 import os
-import threading
-import time
-import socket
-import random
 from flask import Blueprint, request, render_template, flash, redirect, url_for
 from flask import current_app as current_app
 
