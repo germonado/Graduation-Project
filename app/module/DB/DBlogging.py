@@ -1,5 +1,5 @@
 # ble_json_read와 zigbee_json_read에서 만들어진 list들을 db에 로깅하는 모듈
-import os,sys
+import os,sys,json
 import pymysql
 from app.module.Zigbee import zigbee
 from app.module.BLE import bluetooth as ble
@@ -8,18 +8,24 @@ from app.module.BLE import bluetooth as ble
 p_file = './exported_json/zigbee'
 h_file = './exported_json/hub'
 b_file = './exported_json/ble'
+DBINFO_JSON = './app/module/DB/dbinfo.json'
+
+json_file = open(DBINFO_JSON, encoding="utf8")
+json_read = json.load(json_file)
+dbhost = json_read['host']
+dbuser = json_read['user']
+dbpassword = json_read['password']
+
 
 def get_file(dirpath):
-    fileList = [s for s in os.listdir(dirpath) 
-
-    if os.path.isfile(os.path.join(dirpath, s))]
+    fileList = [s for s in os.listdir(dirpath) if os.path.isfile(os.path.join(dirpath, s))]
     fileList.sort(key=lambda s: os.path.getmtime(os.path.join(dirpath, s)), reverse=True)
-	
+    print(fileList)
     return fileList
 
 
 def bleToDB(packetFiles):
-    conn = pymysql.connect(host='localhost', user='root', password='wlalsl4fkd.',
+    conn = pymysql.connect(host=dbhost, user=dbuser, password=dbpassword,
                        db='ble', charset='utf8')
 
     curs = conn.cursor()
@@ -57,7 +63,7 @@ def bleToDB(packetFiles):
 
 
 def zbeeToDB(packetFiles, hubFiles):
-    conn = pymysql.connect(host='localhost', user='root', password='wlalsl4fkd.',
+    conn = pymysql.connect(host=dbhost, user=dbuser, password=dbpassword,
                        db='zigbee', charset='utf8')
 
     curs = conn.cursor()
@@ -150,7 +156,6 @@ def zbeeToDB(packetFiles, hubFiles):
     finally:
         conn.commit()
         conn.close()
-
 
 #bleToDB(get_file(b_file))
 #zbeeToDB(get_file(p_file), get_file(h_file))

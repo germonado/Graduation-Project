@@ -8,6 +8,14 @@ from app.module.BLE import bluetooth
 
 BLE_PATH = './exported_json/ble'
 ZBEE_PATH = './exported_json/zigbee'
+DBINFO_JSON = './app/module/DB/dbinfo.json'
+       
+json_file = open(DBINFO_JSON, encoding="utf8")
+json_read = json.load(json_file)
+dbhost = json_read['host']
+dbuser = json_read['user']
+dbpassword = json_read['password']
+     
 
 class DB_LOAD:
 
@@ -31,7 +39,7 @@ class DB_LOAD:
                 return zbee_file_list
 
         def ble_lists_from_DB(self, file):
-                conn = pymysql.connect(host='localhost', user='root', password='wlalsl4fkd.',
+                conn = pymysql.connect(host=dbhost, user=dbuser, password=dbpassword,
                        db='ble', charset='utf8')
 
                 curs = conn.cursor()
@@ -94,7 +102,7 @@ class DB_LOAD:
 
         def zbee_lists_from_DB(self, file):
                 
-                conn = pymysql.connect(host='localhost', user='root', password='wlalsl4fkd.',
+                conn = pymysql.connect(host=dbhost, user=dbuser, password=dbpassword,
                        db='zigbee', charset='utf8')
 
                 curs = conn.cursor()

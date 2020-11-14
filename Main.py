@@ -34,11 +34,6 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 test= Blueprint('test', __name__, url_prefix='/test')
 
-@app.route("/")
-@app.route("/index.html")
-def home():
-    return render_template('index.html')
-
 @app.route("/log_lists")
 def log_lists():
     path = "./log_data/"
@@ -62,6 +57,8 @@ def zbee_log():
     return render_template('log_list.html', protocol='zbee', zbeeList=log_file)
 
 
+@app.route("/")
+@app.route("/index.html")
 @app.route("/bluetooth_report", methods=['POST', 'GET'])
 def bluetooth_report():
     db = DB.DB_LOAD()
@@ -96,6 +93,11 @@ def log_file_download():
     protocol = request.args.get('protocol', None)
     file_name = request.args.get('file_name', None)
     return send_file(path + '/' + protocol + '/' + file_name, attachment_filename=file_name, as_attachment=True)
+
+
+@app.route("/profile")
+def profile():
+    return render_template('profile.html')
 
 
 # default host address 127.0.0.1

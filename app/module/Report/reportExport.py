@@ -1,4 +1,4 @@
-import os,sys
+import os,sys, json
 import pymysql
 import shutil
 
@@ -9,6 +9,14 @@ b_file = './exported_json/ble'
 db_dir = 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/'
 dest_ble = './log_data/ble/'
 dest_zbee = './log_data/zigbee/'
+
+DBINFO_JSON = './app/module/DB/dbinfo.json'
+
+json_file = open(DBINFO_JSON, encoding="utf8")
+json_read = json.load(json_file)
+dbhost = json_read['host']
+dbuser = json_read['user']
+dbpassword = json_read['password']
 
 
 def get_file(dirpath):
@@ -28,7 +36,7 @@ def csvExport(bleFiles, zbeeFiles):
     try:
         
         #1. 블루투스 export
-        conn = pymysql.connect(host='localhost', user='root', password='wlalsl4fkd.',
+        conn = pymysql.connect(host=dbhost, user=dbuser, password=dbpassword,
                        db='ble', charset='utf8')
         curs = conn.cursor()
         
@@ -63,7 +71,7 @@ def csvExport(bleFiles, zbeeFiles):
 
 
         #2. 지그비 export
-        conn = pymysql.connect(host='localhost', user='root', password='wlalsl4fkd.',
+        conn = pymysql.connect(host=dbhost, user=dbuser, password=dbpassword,
                        db='zigbee', charset='utf8')
         curs = conn.cursor()
 
