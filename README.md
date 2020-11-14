@@ -9,6 +9,14 @@
 - Flask 기반
 - Source tree 기반 협업
 
+# How To Use
+1. 필수로 설치해야하는 라이브러리 > Flask 라이브러리
+2. ./app/module/DB/dbinfo.json 파일에 자신의 디비계정, password등 정보입력
+3. ./app/schema/ 경로의 ble, zigbee sql을 실행하여 bluetooth, zigbee를 분류한 데이터들을 넣기 위한 테이블을 만든다. (bluetooth, zigbee packet의 json 파일은 ./exported_json에 존재)
+4. python Main.py를 실행한다.
+5. 기본 ip 주소는 127.0.0.1(로컬), 8085(포트번호)로 세팅해두었음. 127.0.0.1/8085 로 접속
+6. UI에서 bluetooth(default), zigbee command flow를 확인할 수 있고, log report 파일도 다운로드 받을 수 있다.
+
 # Todo list
 - .exe 파일로 UI 실행
 - 스니핑한 신호를 바탕으로 로그 데이터 정제
