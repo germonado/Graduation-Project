@@ -20,7 +20,7 @@ dbpassword = json_read['password']
 def get_file(dirpath):
     fileList = [s for s in os.listdir(dirpath) if os.path.isfile(os.path.join(dirpath, s))]
     fileList.sort(key=lambda s: os.path.getmtime(os.path.join(dirpath, s)), reverse=True)
-    print(fileList)
+
     return fileList
 
 
@@ -157,5 +157,5 @@ def zbeeToDB(packetFiles, hubFiles):
         conn.commit()
         conn.close()
 
-#bleToDB(get_file(b_file))
-#zbeeToDB(get_file(p_file), get_file(h_file))
+bleToDB(get_file(b_file))
+zbeeToDB(get_file(p_file), get_file(h_file))

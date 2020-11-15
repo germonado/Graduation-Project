@@ -1,19 +1,10 @@
-from flask import Flask
-from flask import render_template
-from flask import request 
-from flask import session
-from flask import send_file
-from flask import send_from_directory
 import os
-from flask import Blueprint, request, render_template, flash, redirect, url_for
-from flask import current_app as current_app
 
-from app.module.DB import DBlogging
-from app.module.DB import DBload as DB
+from flask import Flask, render_template, request, send_file, Blueprint
+from app.module.DB import DBlogging, DBload as DB
 from app.module.Zigbee import zigbee
 from app.module.BLE import bluetooth
 from app.module.Report import reportExport
-
 
 HOST_ADDRESS = '127.0.0.1'
 
